@@ -46,7 +46,7 @@ class XliffDumper implements DumperInterface
      */
     public function setAddDate($bool)
     {
-        $this->addDate = (Boolean) $bool;
+        $this->addDate = $bool;
     }
 
     /**

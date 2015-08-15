@@ -66,7 +66,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
 
         if (!$node instanceof \PHPParser_Node_Expr_MethodCall
             || !is_string($node->name)
-            || ('trans' !== strtolower($node->name) && 'transchoice' !== strtolower($node->name) && 'addviolationat' !== strtolower($node->name) && 'addviolation' !== strtolower($node->name)))) {
+            || ('trans' !== strtolower($node->name) && 'transchoice' !== strtolower($node->name) && 'addviolationat' !== strtolower($node->name) && 'addviolation' !== strtolower($node->name))) {
 
             $this->previousNode = $node;
             return;
@@ -173,7 +173,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             $message->setMeaning($meaning);
             $message->addSource(new FileSource((string)$this->file, $node->getLine()));
             // `parameters` index
-            $index--;
+            $index = $id_index + 1;
             if(isset($node->args[$index])) {
                 if($node->args[$index]->value instanceof \PHPParser_Node_Expr_Array) {
                     foreach($node->args[$index]->value->items as $item) {

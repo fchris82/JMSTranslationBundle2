@@ -91,8 +91,9 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
                 $message->addSource(new FileSource((string) $this->file, $node->getLine()));
 
                 // Placeholders
-                if ($arguments->hasNode(0)) {
-                    foreach($arguments->getNode(0) as $n => $var) {
+                $index--;
+                if ($arguments->hasNode($index)) {
+                    foreach($arguments->getNode($index) as $n => $var) {
                         if($n%2 == 1) {
                             continue;
                         }
