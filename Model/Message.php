@@ -98,6 +98,10 @@ class Message
         }
 
         $this->sources[] = $source;
+        // Rendezzük a forrásokat, mert különben akkor is változni fog a jövőben, ha nem is történt semmi változás.
+        usort($this->sources, function($a, $b) {
+            return strcmp($a->__toString(), $b->__toString());
+        });
 
         return $this;
     }
