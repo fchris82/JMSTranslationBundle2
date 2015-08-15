@@ -52,6 +52,14 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
 
             $message = new Message($id, $domain);
             $message->addSource(new FileSource((string) $this->file, $node->getLine()));
+            // Placeholders
+            foreach($node->getNode('vars') as $n => $var) {
+                if($n%2 == 1) {
+                    continue;
+                }
+
+                $message->addPlaceholder($var->getAttribute('value'));
+            }
             $this->catalogue->add($message);
         } else if ($node instanceof \Twig_Node_Expression_Filter) {
             $name = $node->getNode('filter')->getAttribute('value');
@@ -81,6 +89,17 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
 
                 $message = new Message($id, $domain);
                 $message->addSource(new FileSource((string) $this->file, $node->getLine()));
+
+                // Placeholders
+                if ($arguments->hasNode(0)) {
+                    foreach($arguments->getNode(0) as $n => $var) {
+                        if($n%2 == 1) {
+                            continue;
+                        }
+
+                        $message->addPlaceholder($var->getAttribute('value'));
+                    }
+                }
 
                 for ($i=count($this->stack)-2; $i>=0; $i-=1) {
                     if (!$this->stack[$i] instanceof \Twig_Node_Expression_Filter) {
@@ -124,18 +143,18 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
         $this->traverser->traverse($ast);
         $this->traverseEmbeddedTemplates($ast);
     }
-    
+
     /**
      * If the current Twig Node has embedded templates, we want to travese these templates
-     * in the same manner as we do the main twig template to ensure all translations are 
+     * in the same manner as we do the main twig template to ensure all translations are
      * caught.
-     * 
+     *
      * @param \Twig_Node $node
      */
     private function traverseEmbeddedTemplates(\Twig_Node $node)
     {
         $templates = $node->getAttribute('embedded_templates');
-        
+
         foreach($templates as $template) {
             $this->traverser->traverse($template);
             if ($template->hasAttribute('embedded_templates')) {

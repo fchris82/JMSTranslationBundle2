@@ -66,6 +66,12 @@ class XliffLoader implements LoaderInterface
                 }
             }
 
+            if ($hasReferenceFiles) {
+                foreach ($trans->xpath('./jms:placeholder') as $placeholder) {
+                    $m->addPlaceholder((string) $placeholder);
+                }
+            }
+
             if ($meaning = (string) $trans->note) {
                 $m->setMeaning($meaning);
             }

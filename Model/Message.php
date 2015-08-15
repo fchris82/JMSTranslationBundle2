@@ -45,6 +45,9 @@ class Message
     /** The sources where this message occurs */
     private $sources = array();
 
+    /** The placeholders */
+    protected $placeholders = array();
+
     /**
      * @static
      * @param $id
@@ -246,6 +249,20 @@ class Message
         }
 
         return false;
+    }
+
+    public function addPlaceholder($name)
+    {
+        if(!in_array($name, $this->placeholders)) {
+            $this->placeholders[] = $name;
+        }
+
+        return $this;
+    }
+
+    public function getPlaceholders()
+    {
+        return $this->placeholders;
     }
 
     /**

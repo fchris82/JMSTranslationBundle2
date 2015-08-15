@@ -1,4 +1,4 @@
-    <table>
+    <table id="messages">
         <thead>
             <tr>
                 <th width="20%">ID</th>
@@ -20,7 +20,7 @@
                         <h6>Meaning</h6>
                         <p>{{ message.meaning }}</p>
                     {% endif %}
-                
+
                     {% if alternativeMessages[id] is defined %}
                         <h6>Alternative Translations</h6>
                         {% for locale, altMessage in alternativeMessages[id] %}
@@ -29,17 +29,26 @@
                         </p>
                         {% endfor %}
                     {% endif %}
-                    
+
+                    {% if message.placeholders|length > 0 %}
+                        <h6>Placeholders</h6>
+                        <ul class="placeholders">
+                        {% for placeholder in message.placeholders %}
+                            <li>{{ placeholder }}</li>
+                        {% endfor %}
+                        </ul>
+                    {% endif %}
+
                     {% if message.sources|length > 0 %}
                         <h6>Sources</h6>
-                        <ul>
+                        <ul class="sources">
                         {% for source in message.sources %}
                             <li>{{ source }}</li>
                         {% endfor %}
                         </ul>
                     {% endif %}
 
-                    {% if message.desc is not empty 
+                    {% if message.desc is not empty
                             and message.localeString != message.desc
                             and id != message.desc
                             and (alternativeMessages[id][sourceLanguage] is not defined

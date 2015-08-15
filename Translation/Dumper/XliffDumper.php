@@ -34,10 +34,10 @@ class XliffDumper implements DumperInterface
 {
     private $sourceLanguage = 'en';
     private $addDate = true;
-    
+
     /** @var boolean $addFileRefs */
     private $addFileRefs = true;
-    
+
     /** @var array $privateAttributes */
     private $privateAttributes = ['id', 'resname', 'extradata'];
 
@@ -48,7 +48,7 @@ class XliffDumper implements DumperInterface
     {
         $this->addDate = (Boolean) $bool;
     }
-    
+
     /**
      * @return boolean
      */
@@ -64,7 +64,7 @@ class XliffDumper implements DumperInterface
     {
         $this->sourceLanguage = $lang;
     }
-    
+
     /**
      * @return string
      */
@@ -72,7 +72,7 @@ class XliffDumper implements DumperInterface
     {
         return $this->sourceLanguage;
     }
-    
+
     /**
      * Set addFileRefs
      *
@@ -82,7 +82,7 @@ class XliffDumper implements DumperInterface
     {
         $this->addFileRefs = $bool;
     }
-    
+
     /**
      * Get addFileRefs
      *
@@ -101,12 +101,12 @@ class XliffDumper implements DumperInterface
     {
         $doc = new \DOMDocument('1.0', 'utf-8');
         $doc->formatOutput = true;
-        
+
         $doc->appendChild($root = $doc->createElement('xliff'));
         $root->setAttribute('xmlns', 'urn:oasis:names:tc:xliff:document:1.2');
         $root->setAttribute('xmlns:jms', 'urn:jms:translation');
         $root->setAttribute('version', '1.2');
-        
+
         $root->appendChild($file = $doc->createElement('file'));
 
         if ($this->addDate) {
@@ -131,7 +131,7 @@ class XliffDumper implements DumperInterface
         $note->appendChild($doc->createTextNode('The source node in most cases contains the sample message as written by the developer. If it looks like a dot-delimitted string such as "form.label.firstname", then the developer has not provided a default message.'));
 
         $file->appendChild($body = $doc->createElement('body'));
-        
+
         $customAttributes = $this->extractCustomAttributes($filePath);
 
         foreach ($catalogue->getDomain($domain)->all() as $id => $message) {
@@ -139,7 +139,7 @@ class XliffDumper implements DumperInterface
             $idKey = hash('sha1', $id);
             $unit->setAttribute('id', $idKey);
             $unit->setAttribute('resname', $id);
-            
+
             if (isset($customAttributes[$idKey])) {
                 foreach ($customAttributes[$idKey] as $attribKey => $attribValue) {
                     $unit->setAttribute($attribKey, $attribValue);
@@ -187,6 +187,12 @@ class XliffDumper implements DumperInterface
                 }
             }
 
+            if ($placeholders = $message->getPlaceholders()) {
+                foreach ($placeholders as $placeholder) {
+                    $unit->appendChild($doc->createElement('jms:placeholder', $placeholder));
+                }
+            }
+
             if ($meaning = $message->getMeaning()) {
                 $unit->appendChild($doc->createElement('note', $meaning));
             }
@@ -195,7 +201,7 @@ class XliffDumper implements DumperInterface
 
         return $doc->saveXML();
     }
-    
+
     /**
      * Extracts custom attributes from an existing xlf file
      *
@@ -205,7 +211,7 @@ class XliffDumper implements DumperInterface
     public function extractCustomAttributes($filePath)
     {
         $result = [];
-        
+
         if ($filePath && file_exists($filePath)) {
             $contents = file_get_contents($filePath);
             $data = new \SimpleXMLElement($contents);
@@ -227,7 +233,7 @@ class XliffDumper implements DumperInterface
                 }
             }
         }
-        
+
         return $result;
     }
 }

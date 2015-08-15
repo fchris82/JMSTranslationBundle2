@@ -40,6 +40,25 @@ class FormExtractor implements FileVisitorInterface, \PHPParser_NodeVisitor
     private $defaultDomain;
     private $defaultDomainMessages;
 
+    /**
+     * Itt megadhatóak különböző tömb kulcsok, amiket szintén szeretnénk fordíthatóvá tenni. Pl:
+     * <code>
+     *      'labels' => [
+     *          'translatable_label_1',
+     *          'translatable_label_2',
+     *          'translatable_label_3',
+     *      ]
+     * </code>
+     *
+     * Ha tömbről van szó, akkor a value értékeket nézi, ha pedig stringről, akkor simán az értéket veszi.
+     *
+     * Használat:
+     * Érdemes addMethodCall-ként inicializálás után átadni az értékeket.
+     *
+     * @var array
+     */
+    private $customTranslatedFields = [];
+
     public function __construct(DocParser $docParser)
     {
         $this->docParser = $docParser;
@@ -48,6 +67,25 @@ class FormExtractor implements FileVisitorInterface, \PHPParser_NodeVisitor
         $this->traverser->addVisitor($this);
     }
 
+    /**
+     * Itt megadhatóak különböző tömb kulcsok, amiket szintén szeretnénk fordíthatóvá tenni. Pl:
+     * <code>
+     *      'labels' => [
+     *          'translatable_label_1',
+     *          'translatable_label_2',
+     *          'translatable_label_3',
+     *      ]
+     * </code>
+     *
+     * Használat:
+     * Érdemes addMethodCall-ként inicializálás után átadni az értékeket.
+     *
+     * @param array $fields
+     */
+    public function addCustomTranslationFields(array $fields)
+    {
+        $this->customTranslatedFields = array_unique(array_merge($fields, $this->customTranslatedFields));
+    }
 
     public function enterNode(\PHPParser_Node $node)
     {
@@ -68,7 +106,7 @@ class FormExtractor implements FileVisitorInterface, \PHPParser_NodeVisitor
             }
         }
 
-         if ($node instanceof \PHPParser_Node_Expr_Array) {
+        if ($node instanceof \PHPParser_Node_Expr_Array) {
             // first check if a translation_domain is set for this field
             $domain = null;
             foreach ($node->items as $item) {
@@ -93,7 +131,7 @@ class FormExtractor implements FileVisitorInterface, \PHPParser_NodeVisitor
 
                 if ('empty_value' === $item->key->value && $item->value instanceof \PHPParser_Node_Expr_ConstFetch
                     && $item->value->name instanceof \PHPParser_Node_Name && 'false' === $item->value->name->parts[0]) {
-                	continue;
+                    continue;
                 }
                 if ('empty_value' === $item->key->value && $item->value instanceof \PHPParser_Node_Expr_Array) {
                     foreach ($item->value->items as $sitem) {
@@ -101,7 +139,7 @@ class FormExtractor implements FileVisitorInterface, \PHPParser_NodeVisitor
                     }
                     continue;
                 }
-                
+
                 if ('placeholder' === $item->key->value && $item->value instanceof \PHPParser_Node_Expr_ConstFetch
                     && $item->value->name instanceof \PHPParser_Node_Name && 'false' === $item->value->name->parts[0]) {
                     continue;
@@ -117,25 +155,82 @@ class FormExtractor implements FileVisitorInterface, \PHPParser_NodeVisitor
                     continue;
                 }
 
-                if ('label' !== $item->key->value && 'empty_value' !== $item->key->value && 'placeholder' !== $item->key->value && 'choices' !== $item->key->value && 'invalid_message' !== $item->key->value && 'attr' !== $item->key->value ) {
+                if ('constraints' === $item->key->value && !$item->value instanceof \PHPParser_Node_Expr_Array) {
+                    continue;
+                }
+
+                $enabledKeys = array_unique(array_merge([
+                    'label',
+                    'empty_value',
+                    'placeholder',
+                    'choices',
+                    'invalid_message',
+                    'attr',
+                    'constraints',
+                    'title',
+                ], $this->customTranslatedFields));
+                if (!in_array($item->key->value, $enabledKeys)) {
                     continue;
                 }
 
                 if ('choices' === $item->key->value) {
                     foreach ($item->value->items as $sitem) {
-                        $this->parseItem($sitem, $domain);
-                    }
-                } elseif ('attr' === $item->key->value && is_array($item->value->items) ) {
-                    foreach ($item->value->items as $sitem) {
-                        if ('placeholder' == $sitem->key->value){
+                        if(isset($sitem->key)) {
                             $this->parseItem($sitem, $domain);
                         }
-                        if('title' == $sitem->key->value) {
-                          	$this->parseItem($sitem, $domain);
+                    }
+                } elseif ('attr' === $item->key->value) {
+                    // Amennyiben egy függvény van hívva (pl array_merge), akkor az argumentumokat
+                    // bejárjuk és ha találunk tömböt, akkor azokban megkeressük a megfelelő - placeholder,
+                    // title - elemeket és kigyűjtjük.
+                    if($item->value instanceof \PHPParser_Node_Expr_FuncCall && count($item->value->args) > 0) {
+                        foreach($item->value->args as $arg) {
+                            if($arg->value instanceof \PHPParser_Node_Expr_Array) {
+                                foreach($arg->value->items as $sitem) {
+                                    if ('placeholder' == $sitem->key->value){
+                                        $this->parseItem($sitem, $domain);
+                                    }
+                                    if('title' == $sitem->key->value) {
+                                        $this->parseItem($sitem, $domain);
+                                    }
+                                }
+                            }
+                        }
+                        // Ha nem, akkor feltételezzük, hogy tömböt kaptunk
+                    } elseif (is_array($item->value->items)) {
+                        foreach ($item->value->items as $sitem) {
+                            if ('placeholder' == $sitem->key->value) {
+                                $this->parseItem($sitem, $domain);
+                            }
+                            if ('title' == $sitem->key->value) {
+                                $this->parseItem($sitem, $domain);
+                            }
+                        }
+                    }
+                } elseif ('constraints' === $item->key->value ) {
+                    // végigmegyünk a constraints objektumokon
+                    foreach ($item->value->items as $sitem) {
+                        if(isset($sitem->value->args[0])) {
+                            // Kiolvassuk az első paramétert
+                            $parameter = $sitem->value->args[0];
+                            // Ha az első paraméter tömb...
+                            if($parameter->value instanceof \PHPParser_Node_Expr_Array) {
+                                foreach($parameter->value->items as $pitem) {
+                                    if ('message' == $pitem->key->value){
+                                        $this->parseItem($pitem, 'validators');
+                                    }
+                                }
+                            }
                         }
                     }
                 } elseif ('invalid_message' === $item->key->value) {
                     $this->parseItem($item, 'validators');
+                } elseif ($item->value instanceof \PHPParser_Node_Expr_Array) {
+                    foreach ($item->value->items as $sitem) {
+                        if($sitem->value instanceof \PHPParser_Node_Scalar_String) {
+                            $this->parseItem($sitem, $domain);
+                        }
+                    }
                 } else {
                     $this->parseItem($item, $domain);
                 }

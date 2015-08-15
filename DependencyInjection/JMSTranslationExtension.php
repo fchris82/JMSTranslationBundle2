@@ -36,6 +36,10 @@ class JMSTranslationExtension extends Extension
         $container->setParameter('jms_translation.source_language', $config['source_language']);
         $container->setParameter('jms_translation.locales', $config['locales']);
 
+        // Extend form extractor
+        $def = $container->getDefinition('jms_translation.extractor.file.form_extractor');
+        $def->addMethodCall('addCustomTranslationFields', [$config['custom_form_config_names']]);
+
         $requests = array();
         foreach ($config['configs'] as $name => $extractConfig) {
             $def = new Definition('JMS\TranslationBundle\Translation\ConfigBuilder');
@@ -92,7 +96,7 @@ class JMSTranslationExtension extends Extension
             if (isset($extractConfig['external_translations_dirs'])) {
                 $def->addMethodCall('setLoadResources', array($extractConfig['external_translations_dirs']));
             }
-            
+
             if (isset($extractConfig['output_options'])) {
                 foreach ($extractConfig['output_options'] as $format => $formatOptions) {
                     $def->addMethodCall('setOutputOptions', array($format, $formatOptions));

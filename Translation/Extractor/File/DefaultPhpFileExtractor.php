@@ -66,7 +66,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
 
         if (!$node instanceof \PHPParser_Node_Expr_MethodCall
             || !is_string($node->name)
-            || ('trans' !== strtolower($node->name) && 'transchoice' !== strtolower($node->name))) {
+            || ('trans' !== strtolower($node->name) && 'transchoice' !== strtolower($node->name) && 'addviolationat' !== strtolower($node->name) && 'addviolation' !== strtolower($node->name)))) {
 
             $this->previousNode = $node;
             return;
@@ -104,16 +104,59 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             throw new RuntimeException($message);
         }
 
-        $id = $node->args[0]->value->value;
+        if(strpos($node->name, 'trans')===0) {
+            $id = $node->args[0]->value->value;
 
-        $index = 'trans' === strtolower($node->name) ? 2 : 3;
-        if (isset($node->args[$index])) {
-            if (!$node->args[$index]->value instanceof \PHPParser_Node_Scalar_String) {
+            // domain index
+            $index = 'trans' === strtolower($node->name) ? 2 : 3;
+            // $domain exists and not null!
+            if (isset($node->args[$index])
+                && !($node->args[$index]->value instanceof \PHPParser_Node_Expr_ConstFetch && $node->args[$index]->value->name == "null")
+            ) {
+                if (!$node->args[$index]->value instanceof \PHPParser_Node_Scalar_String) {
+                    if ($ignore) {
+                        return;
+                    }
+
+                    $message = sprintf('Can only extract the translation domain from a scalar string, but got "%s". Please refactor your code to make it extractable, or add the doc comment /** @Ignore */ to this code element (in %s on line %d).', get_class($node->args[0]->value), $this->file, $node->args[0]->value->getLine());
+
+                    if ($this->logger) {
+                        $this->logger->err($message);
+                        return;
+                    }
+
+                    throw new RuntimeException($message);
+                }
+
+                $domain = $node->args[$index]->value->value;
+            } else {
+                $domain = 'messages';
+            }
+
+            $message = new Message($id, $domain);
+            $message->setDesc($desc);
+            $message->setMeaning($meaning);
+            $message->addSource(new FileSource((string) $this->file, $node->getLine()));
+
+            // `parameters` index
+            $index--;
+            if(isset($node->args[$index])) {
+                if($node->args[$index]->value instanceof \PHPParser_Node_Expr_Array) {
+                    foreach($node->args[$index]->value->items as $item) {
+                        $message->addPlaceholder($item->key->value);
+                    }
+                }
+            }
+        } elseif(strpos(strtolower($node->name), 'addviolation')===0) {
+            $domain = 'validators';
+
+            $id_index = (strtolower($node->name) === 'addviolation') ? 0 : 1;
+            if (!$node->args[$id_index]->value instanceof \PHPParser_Node_Scalar_String) {
                 if ($ignore) {
                     return;
                 }
 
-                $message = sprintf('Can only extract the translation domain from a scalar string, but got "%s". Please refactor your code to make it extractable, or add the doc comment /** @Ignore */ to this code element (in %s on line %d).', get_class($node->args[0]->value), $this->file, $node->args[0]->value->getLine());
+                $message = sprintf('Can only extract the translation id from a scalar string, but got "%s". Please refactor your code to make it extractable, or add the doc comment /** @Ignore */ to this code element (in %s on line %d).', get_class($node->args[0]->value), $this->file, $node->args[0]->value->getLine());
 
                 if ($this->logger) {
                     $this->logger->err($message);
@@ -123,15 +166,22 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
                 throw new RuntimeException($message);
             }
 
-            $domain = $node->args[$index]->value->value;
-        } else {
-            $domain = 'messages';
-        }
+            $id = $node->args[$id_index]->value->value;
 
-        $message = new Message($id, $domain);
-        $message->setDesc($desc);
-        $message->setMeaning($meaning);
-        $message->addSource(new FileSource((string) $this->file, $node->getLine()));
+            $message = new Message($id, $domain);
+            $message->setDesc($desc);
+            $message->setMeaning($meaning);
+            $message->addSource(new FileSource((string)$this->file, $node->getLine()));
+            // `parameters` index
+            $index--;
+            if(isset($node->args[$index])) {
+                if($node->args[$index]->value instanceof \PHPParser_Node_Expr_Array) {
+                    foreach($node->args[$index]->value->items as $item) {
+                        $message->addPlaceholder($item->key->value);
+                    }
+                }
+            }
+        }
 
         $this->catalogue->add($message);
     }
