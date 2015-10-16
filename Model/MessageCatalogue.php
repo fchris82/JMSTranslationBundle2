@@ -131,6 +131,9 @@ class MessageCatalogue
         return $this->domains[$domain];
     }
 
+    /**
+     * @return array|\Symfony\Component\Translation\MessageCatalogue[]
+     */
     public function getDomains()
     {
         return $this->domains;

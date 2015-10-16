@@ -49,7 +49,7 @@ class Updater
      */
     private $config;
     private $existingCatalogue;
-    private $scannedCatalogue;
+    private $scannedCatalogues = [];
     private $logger;
     private $writer;
 
@@ -88,7 +88,7 @@ class Updater
         $comparator->setIgnoredDomains($this->config->getIgnoredDomains());
         $comparator->setDomains($this->config->getDomains());
 
-        return $comparator->compare($this->existingCatalogue, $this->scannedCatalogue);
+        return $comparator->compare($this->existingCatalogue, $this->getScannedCatalogue($config));
     }
 
     /**
@@ -107,9 +107,9 @@ class Updater
             ->setLocaleString($trans)
             ->setNew(false)
         ;
-        
+
         $outputOptions = $this->config['output_options'][$format];
-         
+
         $this->writer->write($catalogue, $domain, $file, $format, $outputOptions);
     }
 
@@ -125,7 +125,8 @@ class Updater
     {
         $this->setConfig($config);
 
-        foreach ($this->scannedCatalogue->getDomains() as $name => $domain) {
+        $scannedCatalogue = $this->getScannedCatalogue($config);
+        foreach ($scannedCatalogue->getDomains() as $name => $domain) {
             // skip domain not selected
             if ($this->config->hasDomains() && !$this->config->hasDomain($name)) {
                 continue;
@@ -153,7 +154,7 @@ class Updater
             $outputFile = $this->config->getTranslationsDir().'/'.$name.'.'.$this->config->getLocale().'.'.$format;
             $outputOptions = $this->config->getOutputOptions($format);
             $this->logger->info(sprintf('Writing translation file "%s".', $outputFile));
-            $this->writer->write($this->scannedCatalogue, $name, $outputFile, $format, $outputOptions);
+            $this->writer->write($scannedCatalogue, $name, $outputFile, $format, $outputOptions);
         }
     }
 
@@ -227,18 +228,12 @@ class Updater
             $config->getTranslationsDir(), $config->getLocale()
         ));
 
-        $this->extractor->reset();
-        $this->extractor->setDirectories($config->getScanDirs());
-        $this->extractor->setExcludedDirs($config->getExcludedDirs());
-        $this->extractor->setExcludedNames($config->getExcludedNames());
-        $this->extractor->setEnabledExtractors($config->getEnabledExtractors());
-
-        $this->logger->info("Extracting translation keys");
-        $this->scannedCatalogue = $this->extractor->extract();
-        $this->scannedCatalogue->setLocale($config->getLocale());
+        $scannedCatalogue = $this->getScannedCatalogue($config);
+        $scannedCatalogue->setLocale($config->getLocale());
 
         // merge existing messages into scanned messages
-        foreach ($this->scannedCatalogue->getDomains() as $domainCatalogue) {
+        foreach ($scannedCatalogue->getDomains() as $domainCatalogue) {
+            /** @var Message $message */
             foreach ($domainCatalogue->all() as $message) {
                 if (!$this->existingCatalogue->has($message)) {
                     continue;
@@ -251,13 +246,46 @@ class Updater
         if ($this->config->isKeepOldMessages()) {
             foreach ($this->existingCatalogue->getDomains() as $domainCatalogue) {
                 foreach ($domainCatalogue->all() as $message) {
-                    if ($this->scannedCatalogue->has($message)) {
+                    if ($scannedCatalogue->has($message)) {
                         continue;
                     }
 
-                    $this->scannedCatalogue->add($message);
+                    $scannedCatalogue->add($message);
                 }
             }
         }
+    }
+
+    /**
+     * @param Config $config
+     * @return MessageCatalogue
+     */
+    private function getScannedCatalogue(Config $config)
+    {
+        $configHash = $this->getExtractorHashFromConfig($config);
+        if (!array_key_exists($configHash, $this->scannedCatalogues)) {
+            $this->extractor->reset();
+            $this->extractor->setDirectories($config->getScanDirs());
+            $this->extractor->setExcludedDirs($config->getExcludedDirs());
+            $this->extractor->setExcludedNames($config->getExcludedNames());
+            $this->extractor->setEnabledExtractors($config->getEnabledExtractors());
+
+            $this->logger->info("Extracting translation keys");
+            $this->scannedCatalogues[$configHash] = $this->extractor->extract();
+        } else {
+            $this->logger->info("Translation keys have been extracted");
+        }
+
+        return $this->scannedCatalogues[$configHash];
+    }
+
+    private function getExtractorHashFromConfig(Config $config)
+    {
+        return md5(implode(':', array_merge(
+            $config->getScanDirs(), ['::'],
+            $config->getExcludedDirs(), ['::'],
+            $config->getExcludedNames(), ['::'],
+            $config->getEnabledExtractors()
+        )));
     }
 }
