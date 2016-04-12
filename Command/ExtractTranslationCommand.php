@@ -18,6 +18,8 @@
 
 namespace JMS\TranslationBundle\Command;
 
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\DocParser;
 use JMS\TranslationBundle\Translation\ConfigBuilder;
 use JMS\TranslationBundle\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -72,8 +74,8 @@ class ExtractTranslationCommand extends ContainerAwareCommand
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $builder = $input->getOption('config') ?
-                       $this->getContainer()->get('jms_translation.config_factory')->getBuilder($input->getOption('config'))
-                       : new ConfigBuilder();
+            $this->getContainer()->get('jms_translation.config_factory')->getBuilder($input->getOption('config'))
+            : new ConfigBuilder();
 
         $this->updateWithInput($input, $builder);
 
@@ -98,6 +100,8 @@ class ExtractTranslationCommand extends ContainerAwareCommand
             $output->writeln(sprintf('Output-Format: <info>%s</info>', $config->getOutputFormat() ? $config->getOutputFormat() : '# whatever is present, if nothing then '.$config->getDefaultOutputFormat().' #'));
             $output->writeln(sprintf('Custom Extractors: <info>%s</info>', $config->getEnabledExtractors() ? implode(', ', array_keys($config->getEnabledExtractors())) : '# none #'));
             $output->writeln('============================================================');
+
+            $this->fixIgnoreAnnotationBug();
 
             $updater = $this->getContainer()->get('jms_translation.updater');
             $updater->setLogger($logger = new OutputLogger($output));
@@ -134,6 +138,44 @@ class ExtractTranslationCommand extends ContainerAwareCommand
         }
 
         $output->writeln('done!');
+    }
+
+    /**
+     * Az AnnotationReader magába égeti, hogy mindenképpen exception-t dobjon, ha ismeretlen annotation-nel találkozik.
+     * Ezt orvosolja ez a megoldás.
+     *
+     * @see \Doctrine\Common\Annotations\AnnotationReader::__construct()
+     * @see \Doctrine\Common\Annotations\DocParser::Annotation()
+     * @see \Doctrine\Common\Annotations\DocParser::$ignoreNotImportedAnnotations
+     */
+    protected function fixIgnoreAnnotationBug()
+    {
+        $annotationReader = $this->getContainer()->get('annotation_reader');
+        $reflectionClass = new \ReflectionClass(get_class($annotationReader));
+        if ($reflectionClass->hasProperty('delegate')) {
+            $annotationReader = $this->getProtectedProperty($annotationReader, 'delegate');
+        }
+        /** @var DocParser $parser */
+        $parser = $this->getProtectedProperty($annotationReader, 'parser');
+        $parser->setIgnoreNotImportedAnnotations(true);
+    }
+
+    /**
+     * The self::fixIgnoreAnnotationBug() uses it only.
+     *
+     * @param object $object
+     * @param string $propertyName
+     * @return mixed
+     *
+     * @see \JMS\TranslationBundle\Command\ExtractTranslationCommand::fixIgnoreAnnotationBug()
+     */
+    protected function getProtectedProperty($object, $propertyName)
+    {
+        $reflectionClass = new \ReflectionClass(get_class($object));
+        $reflectionProperty = $reflectionClass->getProperty($propertyName);
+        $reflectionProperty->setAccessible(true);
+
+        return $reflectionProperty->getValue($object);
     }
 
     /**
