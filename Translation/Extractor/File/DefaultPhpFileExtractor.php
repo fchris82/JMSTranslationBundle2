@@ -99,10 +99,18 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
      */
     public function enterNode(Node $node)
     {
+        $functions = [
+            'trans',
+            'transchoice',
+            'addviolation',
+            'addviolationat',
+            'buildviolation',
+        ];
         if (!$node instanceof Node\Expr\MethodCall
             || !is_string($node->name)
-            || ('trans' !== strtolower($node->name) && 'transchoice' !== strtolower($node->name) && 'addviolationat' !== strtolower($node->name) && 'addviolation' !== strtolower($node->name))) {
-
+            || !in_array(strtolower($node->name), $functions)
+            || count($node->args) == 0
+        ) {
             $this->previousNode = $node;
             return;
         }
@@ -182,10 +190,10 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
                     }
                 }
             }
-        } elseif(strpos(strtolower($node->name), 'addviolation')===0) {
+        } elseif(strpos(strtolower($node->name), 'violation')!==false && count($node->args)>0) {
             $domain = 'validators';
 
-            $id_index = (strtolower($node->name) === 'addviolation') ? 0 : 1;
+            $id_index = (strtolower($node->name) === 'addviolationat') ? 1 : 0;
             if (!$node->args[$id_index]->value instanceof String_) {
                 if ($ignore) {
                     return;
