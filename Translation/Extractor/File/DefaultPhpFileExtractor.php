@@ -47,32 +47,32 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
     /**
      * @var NodeTraverser
      */
-    private $traverser;
+    protected $traverser;
 
     /**
      * @var MessageCatalogue
      */
-    private $catalogue;
+    protected $catalogue;
 
     /**
      * @var \SplFileInfo
      */
-    private $file;
+    protected $file;
 
     /**
      * @var DocParser
      */
-    private $docParser;
+    protected $docParser;
 
     /**
      * @var LoggerInterface
      */
-    private $logger;
+    protected $logger;
 
     /**
      * @var Node
      */
-    private $previousNode;
+    protected $previousNode;
 
     /**
      * DefaultPhpFileExtractor constructor.
@@ -286,7 +286,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
      * @param Node $node
      * @return null|string
      */
-    private function getDocCommentForNode(Node $node)
+    protected function getDocCommentForNode(Node $node)
     {
         // check if there is a doc comment for the ID argument
         // ->trans(/** @Desc("FOO") */ 'my.id')
