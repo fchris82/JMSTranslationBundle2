@@ -1,5 +1,5 @@
 {
-    "name":         "jms/translation-bundle",
+    "name":         "fchris82/jms-translation-bundle-fork",
     "description":  "Puts the Symfony Translation Component on steroids",
     "keywords":     ["translation", "multilanguage", "extract", "webinterface", "ui", "i18n", "extraction", "interface"],
     "homepage":     "http://jmsyst.com/bundles/JMSTranslationBundle",
@@ -9,6 +9,10 @@
         {
             "name":   "Johannes M. Schmitt",
             "email":  "schmittjoh@gmail.com"
+        },
+        {
+            "name":   "Krisztián Ferenczi",
+            "email":  "ferenczi.krisztian@gmail.com"
         }
     ],
     "minimum-stability": "stable",
