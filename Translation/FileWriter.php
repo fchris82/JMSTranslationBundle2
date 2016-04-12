@@ -43,9 +43,10 @@ class FileWriter
     }
 
     /**
-     * @param \JMS\TranslationBundle\Model\MessageCatalogue $domain
-     * @param $filePath
-     * @param $format
+     * @param \JMS\TranslationBundle\Model\MessageCatalogue $catalogue
+     * @param string $domain
+     * @param string $filePath
+     * @param string $format
      * @param array $outputOptions
      * @throws \JMS\TranslationBundle\Exception\InvalidArgumentException
      */
@@ -56,12 +57,12 @@ class FileWriter
         }
 
         // sort messages before dumping
-        $catalogue->getDomain($domain)->sort(function($a, $b) {
+        $catalogue->getDomain($domain)->sort(function ($a, $b) {
             return strcmp($a->getId(), $b->getId());
         });
-        
+
         $dumper = $this->dumpers[$format];
-        
+
         if ($dumper instanceof \JMS\TranslationBundle\Translation\Dumper\XliffDumper) {
             if (isset($outputOptions['add_date'])) {
                 $dumper->setAddDate($outputOptions['add_date']);
@@ -70,7 +71,7 @@ class FileWriter
                 $dumper->setAddFileRefs($outputOptions['add_filerefs']);
             }
         }
-        
+
         file_put_contents($filePath, $dumper->dump($catalogue, $domain, $filePath));
     }
 }

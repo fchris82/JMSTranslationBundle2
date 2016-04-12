@@ -20,7 +20,6 @@ namespace JMS\TranslationBundle\Translation\Extractor\File;
 
 use JMS\TranslationBundle\Exception\RuntimeException;
 use Symfony\Bridge\Twig\Node\TransNode;
-
 use JMS\TranslationBundle\Model\FileSource;
 use JMS\TranslationBundle\Model\Message;
 use JMS\TranslationBundle\Model\MessageCatalogue;
@@ -28,17 +27,40 @@ use JMS\TranslationBundle\Translation\Extractor\FileVisitorInterface;
 
 class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterface
 {
+    /**
+     * @var \SplFileInfo
+     */
     private $file;
-    private $catalogue;
-    private $traverser;
-    private $stack = array();
-    private $stackCount = 0;
 
+    /**
+     * @var MessageCatalogue
+     */
+    private $catalogue;
+
+    /**
+     * @var \Twig_NodeTraverser
+     */
+    private $traverser;
+
+    /**
+     * @var array
+     */
+    private $stack = array();
+
+    /**
+     * TwigFileExtractor constructor.
+     * @param \Twig_Environment $env
+     */
     public function __construct(\Twig_Environment $env)
     {
         $this->traverser = new \Twig_NodeTraverser($env, array($this));
     }
 
+    /**
+     * @param \Twig_NodeInterface $node
+     * @param \Twig_Environment $env
+     * @return \Twig_NodeInterface
+     */
     public function enterNode(\Twig_NodeInterface $node, \Twig_Environment $env)
     {
         $this->stack[] = $node;
@@ -61,7 +83,7 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
                 $message->addPlaceholder($var->getAttribute('value'));
             }
             $this->catalogue->add($message);
-        } else if ($node instanceof \Twig_Node_Expression_Filter) {
+        } elseif ($node instanceof \Twig_Node_Expression_Filter) {
             $name = $node->getNode('filter')->getAttribute('value');
 
             if ('trans' === $name || 'transchoice' === $name) {
@@ -120,7 +142,7 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
                         }
 
                         $message->{'set'.$name}($text->getAttribute('value'));
-                    } else if ('trans' === $name) {
+                    } elseif ('trans' === $name) {
                         break;
                     }
                 }
@@ -132,11 +154,19 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
         return $node;
     }
 
+    /**
+     * @return int
+     */
     public function getPriority()
     {
         return 0;
     }
 
+    /**
+     * @param \SplFileInfo $file
+     * @param MessageCatalogue $catalogue
+     * @param \Twig_Node $ast
+     */
     public function visitTwigFile(\SplFileInfo $file, MessageCatalogue $catalogue, \Twig_Node $ast)
     {
         $this->file = $file;
@@ -156,7 +186,7 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
     {
         $templates = $node->getAttribute('embedded_templates');
 
-        foreach($templates as $template) {
+        foreach ($templates as $template) {
             $this->traverser->traverse($template);
             if ($template->hasAttribute('embedded_templates')) {
                 $this->traverseEmbeddedTemplates($template);
@@ -164,6 +194,11 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
         }
     }
 
+    /**
+     * @param \Twig_NodeInterface $node
+     * @param \Twig_Environment $env
+     * @return \Twig_NodeInterface
+     */
     public function leaveNode(\Twig_NodeInterface $node, \Twig_Environment $env)
     {
         array_pop($this->stack);
@@ -171,6 +206,20 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
         return $node;
     }
 
-    public function visitFile(\SplFileInfo $file, MessageCatalogue $catalogue) { }
-    public function visitPhpFile(\SplFileInfo $file, MessageCatalogue $catalogue, array $ast) { }
+    /**
+     * @param \SplFileInfo $file
+     * @param MessageCatalogue $catalogue
+     */
+    public function visitFile(\SplFileInfo $file, MessageCatalogue $catalogue)
+    {
+    }
+
+    /**
+     * @param \SplFileInfo $file
+     * @param MessageCatalogue $catalogue
+     * @param array $ast
+     */
+    public function visitPhpFile(\SplFileInfo $file, MessageCatalogue $catalogue, array $ast)
+    {
+    }
 }

@@ -32,7 +32,14 @@ use JMS\TranslationBundle\Model\MessageCatalogue;
  */
 class XliffDumper implements DumperInterface
 {
+    /**
+     * @var string
+     */
     private $sourceLanguage = 'en';
+
+    /**
+     * @var bool
+     */
     private $addDate = true;
 
     /** @var boolean $addFileRefs */
@@ -46,7 +53,7 @@ class XliffDumper implements DumperInterface
      */
     public function setAddDate($bool)
     {
-        $this->addDate = $bool;
+        $this->addDate = (bool) $bool;
     }
 
     /**
@@ -94,7 +101,9 @@ class XliffDumper implements DumperInterface
     }
 
     /**
-     * @param \JMS\TranslationBundle\Model\MessageCatalogue $domain
+     * @param MessageCatalogue $catalogue
+     * @param MessageCatalogue|string $domain
+     * @param string $filePath
      * @return string
      */
     public function dump(MessageCatalogue $catalogue, $domain = 'messages', $filePath = null)
@@ -196,7 +205,6 @@ class XliffDumper implements DumperInterface
             if ($meaning = $message->getMeaning()) {
                 $unit->appendChild($doc->createElement('note', $meaning));
             }
-
         }
 
         return $doc->saveXML();

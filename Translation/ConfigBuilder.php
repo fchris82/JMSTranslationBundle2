@@ -20,18 +20,69 @@ namespace JMS\TranslationBundle\Translation;
 
 final class ConfigBuilder
 {
+    /**
+     * @var string Path to translation directory
+     */
     private $translationsDir;
+
+    /**
+     * @var string
+     */
     private $locale;
+
+    /**
+     * @var array
+     */
     private $ignoredDomains = array();
+
+    /**
+     * @var array
+     */
     private $domains = array();
+
+    /**
+     * @var string
+     */
     private $outputFormat;
-    private $defaultOutputFormat = 'xliff';
+
+    /**
+     * @var string
+     */
+    private $defaultOutputFormat = 'xlf';
+
+    /**
+     * @var array
+     */
     private $scanDirs = array();
+
+    /**
+     * @var array
+     */
     private $excludedDirs = array('Tests');
+
+    /**
+     * @var array
+     */
     private $excludedNames = array('*Test.php', '*TestCase.php');
+
+    /**
+     * @var array
+     */
     private $enabledExtractors = array();
+
+    /**
+     * @var bool
+     */
     private $keepOldTranslations = false;
+
+    /**
+     * @var array
+     */
     private $loadResources = array();
+
+    /**
+     * @var array
+     */
     private $outputOptions = [
         'xlf' => [
             'add_date' => true,
@@ -63,14 +114,15 @@ final class ConfigBuilder
     }
 
     /**
-    * Sets the default output format.
-    *
-    * The default output format is used when the following conditions are met:
-    *   - there is no existing file for the given domain
-    *   - you haven't forced a format
-    *
-    * @param string $format
-    */
+     * Sets the default output format.
+     *
+     * The default output format is used when the following conditions are met:
+     *   - there is no existing file for the given domain
+     *   - you haven't forced a format
+     *
+     * @param string $format
+     * @return $this
+     */
     public function setDefaultOutputFormat($format)
     {
         $this->defaultOutputFormat = $format;
@@ -86,6 +138,7 @@ final class ConfigBuilder
      * another format to be deleted.
      *
      * @param string $format
+     * @return $this
      */
     public function setOutputFormat($format)
     {
@@ -101,7 +154,7 @@ final class ConfigBuilder
      * appear in the change set calculated by getChangeSet().
      *
      * @param array $domains an array of the form array('domain' => true, 'another_domain' => true)
-     * @return void
+     * @return $this
      */
     public function setIgnoredDomains(array $domains)
     {
@@ -110,6 +163,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param string $domain
+     * @return $this
+     */
     public function addIgnoredDomain($domain)
     {
         $this->ignoredDomains[$domain] = true;
@@ -117,6 +174,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param array $domains
+     * @return $this
+     */
     public function setDomains(array $domains)
     {
         $this->domains = $domains;
@@ -124,6 +185,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param string $domain
+     * @return $this
+     */
     public function addDomain($domain)
     {
         $this->domains[$domain] = true;
@@ -131,6 +196,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param string $locale
+     * @return $this
+     */
     public function setLocale($locale)
     {
         $this->locale = $locale;
@@ -138,6 +207,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param string $dir
+     * @return $this
+     */
     public function setTranslationsDir($dir)
     {
         $this->translationsDir = $dir;
@@ -145,6 +218,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param array $dirs
+     * @return $this
+     */
     public function setScanDirs(array $dirs)
     {
         $this->scanDirs = $dirs;
@@ -152,6 +229,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param array $dirs
+     * @return $this
+     */
     public function setExcludedDirs(array $dirs)
     {
         $this->excludedDirs = $dirs;
@@ -159,6 +240,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param array $names
+     * @return $this
+     */
     public function setExcludedNames(array $names)
     {
         $this->excludedNames = $names;
@@ -166,6 +251,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param array $aliases
+     * @return $this
+     */
     public function setEnabledExtractors(array $aliases)
     {
         $this->enabledExtractors = $aliases;
@@ -173,6 +262,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param string $alias
+     * @return $this
+     */
     public function enableExtractor($alias)
     {
         $this->enabledExtractors[$alias] = true;
@@ -180,6 +273,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param string $alias
+     * @return $this
+     */
     public function disableExtractor($alias)
     {
         unset($this->enabledExtractors[$alias]);
@@ -187,6 +284,10 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @param bool $value
+     * @return $this
+     */
     public function setKeepOldTranslations($value)
     {
         $this->keepOldTranslations = $value;
@@ -194,6 +295,9 @@ final class ConfigBuilder
         return $this;
     }
 
+    /**
+     * @return Config
+     */
     public function getConfig()
     {
         return new Config(
@@ -213,24 +317,28 @@ final class ConfigBuilder
         );
     }
 
+    /**
+     * @param array $loadResources
+     * @return $this
+     */
     public function setLoadResources(array $loadResources)
     {
         $this->loadResources = $loadResources;
 
         return $this;
     }
-    
+
     public function setOutputOptions($format, array $options)
     {
         $this->outputOptions[$format] = $options;
-        
+
         return $this;
     }
-    
+
     public function setOutputOption($format, $key, $value)
     {
         $this->outputOptions[$format][$key] = $value;
-        
+
         return $this;
     }
 }

@@ -65,7 +65,7 @@ class Configuration implements ConfigurationInterface
                                     ->requiresAtLeastOneElement()
                                     ->prototype('scalar')
                                         ->validate()
-                                            ->always(function($v) use ($c) {
+                                            ->always(function ($v) use ($c) {
                                                 $v = str_replace(DIRECTORY_SEPARATOR, '/', $v);
 
                                                 if ('@' === $v[0]) {

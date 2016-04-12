@@ -19,6 +19,7 @@
 namespace JMS\TranslationBundle\Model;
 
 use JMS\TranslationBundle\Exception\InvalidArgumentException;
+use JMS\TranslationBundle\Model\MessageCollection;
 
 /**
  * Represents a collection of **extracted** messages.
@@ -34,7 +35,14 @@ use JMS\TranslationBundle\Exception\InvalidArgumentException;
  */
 class MessageCatalogue
 {
+    /**
+     * @var string
+     */
     private $locale;
+
+    /**
+     * @var array|MessageCollection[]
+     */
     private $domains = array();
 
     /**
@@ -88,7 +96,7 @@ class MessageCatalogue
 
     /**
      * @param Message $message
-     * @return Boolean
+     * @return bool
      */
     public function has(Message $message)
     {
@@ -111,7 +119,7 @@ class MessageCatalogue
 
     /**
      * @param string $domain
-     * @return Boolean
+     * @return bool
      */
     public function hasDomain($domain)
     {
@@ -132,7 +140,7 @@ class MessageCatalogue
     }
 
     /**
-     * @return array|\Symfony\Component\Translation\MessageCatalogue[]
+     * @return array|MessageCollection[]
      */
     public function getDomains()
     {

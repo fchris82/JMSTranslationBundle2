@@ -30,22 +30,87 @@ use JMS\TranslationBundle\Exception\RuntimeException;
  */
 final class Config
 {
+    /**
+     * @var string
+     */
     private $translationsDir;
+
+    /**
+     * @var string
+     */
     private $locale;
+
+    /**
+     * @var array
+     */
     private $ignoredDomains;
+
+    /**
+     * @var array
+     */
     private $domains;
+
+    /**
+     * @var string
+     */
     private $outputFormat;
+
+    /**
+     * @var string
+     */
     private $defaultOutputFormat;
+
+    /**
+     * @var array
+     */
     private $scanDirs;
+
+    /**
+     * @var array
+     */
     private $excludedDirs;
+
+    /**
+     * @var array
+     */
     private $excludedNames;
+
+    /**
+     * @var array
+     */
     private $enabledExtractors;
 
+    /**
+     * @var bool
+     */
     private $keepOldMessages;
+
+    /**
+     * @var array
+     */
     private $loadResources;
+
+    /**
+     * @var array
+     */
     private $outputOptions;
 
-
+    /**
+     * Config constructor.
+     * @param $translationsDir
+     * @param $locale
+     * @param array $ignoredDomains
+     * @param array $domains
+     * @param $outputFormat
+     * @param $defaultOutputFormat
+     * @param array $scanDirs
+     * @param array $excludedDirs
+     * @param array $excludedNames
+     * @param array $enabledExtractors
+     * @param bool $keepOldMessages
+     * @param array $loadResources
+     * @param array $outputOptions
+     */
     public function __construct($translationsDir, $locale, array $ignoredDomains, array $domains, $outputFormat, $defaultOutputFormat, array $scanDirs, array $excludedDirs, array $excludedNames, array $enabledExtractors, $keepOldMessages, array $loadResources, array $outputOptions)
     {
         if (empty($translationsDir)) {
@@ -99,7 +164,7 @@ final class Config
 
     /**
      * @param $domain
-     * @return Boolean
+     * @return bool
      */
     public function isIgnoredDomain($domain)
     {
@@ -116,7 +181,7 @@ final class Config
 
     /**
      * @param $domain
-     * @return Boolean
+     * @return bool
      */
     public function hasDomain($domain)
     {
@@ -124,7 +189,7 @@ final class Config
     }
 
     /**
-     * @return Boolean
+     * @return bool
      */
     public function hasDomains()
     {
@@ -140,7 +205,7 @@ final class Config
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getOutputFormat()
     {
@@ -148,7 +213,7 @@ final class Config
     }
 
     /**
-     * @return mixed
+     * @return string
      */
     public function getDefaultOutputFormat()
     {
@@ -196,7 +261,7 @@ final class Config
     }
 
     /**
-     * @return Boolean
+     * @return bool
      */
     public function isKeepOldMessages()
     {
@@ -210,7 +275,7 @@ final class Config
     {
         return $this->loadResources;
     }
-    
+
     /**
      * @return array
      */

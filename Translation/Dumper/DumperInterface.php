@@ -38,5 +38,5 @@ interface DumperInterface
      * @param string $filePath
      * @return string
      */
-    function dump(MessageCatalogue $catalogue, $domain = 'messages', $filePath = null);
+    public function dump(MessageCatalogue $catalogue, $domain = 'messages', $filePath = null);
 }
