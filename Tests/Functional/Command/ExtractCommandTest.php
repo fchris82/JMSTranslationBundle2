@@ -48,6 +48,7 @@ class ExtractCommandTest extends BaseCommandTestCase
            .'Loading catalogues from "'.$outputDir.'"'."\n"
            .'Extracting translation keys'."\n"
            .'Extracting messages from directory : '.$inputDir."\n"
+           .'Translation keys have been extracted'."\n"
            .'Writing translation file "'.$outputDir.'/messages.en.xlf".'."\n"
            .'done!'."\n"
         ;
@@ -58,7 +59,7 @@ class ExtractCommandTest extends BaseCommandTestCase
         $files = FileUtils::findTranslationFiles($outputDir);
         $this->assertTrue(isset($files['messages']['en']));
     }
-    
+
     public function testExtractDryRun()
     {
         $input = new ArgvInput(array(
@@ -86,7 +87,7 @@ class ExtractCommandTest extends BaseCommandTestCase
         );
 
         $this->getApp()->run($input, $output = new Output());
-        
+
         foreach ($expectedOutput as $transID) {
             $this->assertContains($transID, $output->getContent());
         }

@@ -1,8 +1,8 @@
-{{ "text.foo"|trans }}
+{{ "text.foo"|trans|desc("Foo Bar")|meaning("Some Meaning")}}
 
-{{ "text.bar"|trans }}
+{{ "text.bar"|trans|desc("Foo") }}
 
-{{ "text.baz"|trans }}
+{{ "text.baz"|trans|meaning("Bar") }}
 
 {{ "text.foo_bar"|trans({}, "foo") }}
 

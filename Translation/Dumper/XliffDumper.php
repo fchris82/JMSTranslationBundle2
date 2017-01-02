@@ -21,6 +21,7 @@ namespace JMS\TranslationBundle\Translation\Dumper;
 use JMS\TranslationBundle\Model\FileSource;
 use JMS\TranslationBundle\JMSTranslationBundle;
 use JMS\TranslationBundle\Model\MessageCatalogue;
+use JMS\TranslationBundle\Model\Message\XliffMessage;
 
 /**
  * XLIFF dumper.
@@ -42,11 +43,18 @@ class XliffDumper implements DumperInterface
      */
     private $addDate = true;
 
-    /** @var boolean $addFileRefs */
-    private $addFileRefs = true;
-
     /** @var array $privateAttributes */
     private $privateAttributes = ['id', 'resname', 'extradata'];
+
+    /**
+     * @var bool
+     */
+    private $addReference = true;
+
+    /**
+     * @var bool
+     */
+    private $addReferencePosition = true;
 
     /**
      * @param $bool
@@ -81,23 +89,19 @@ class XliffDumper implements DumperInterface
     }
 
     /**
-     * Set addFileRefs
-     *
-     * @param boolean $bool
+     * @param $bool
      */
-    public function setAddFileRefs($bool)
+    public function setAddReference($bool)
     {
-        $this->addFileRefs = $bool;
+        $this->addReference = $bool;
     }
 
     /**
-     * Get addFileRefs
-     *
-     * @return boolean
+     * @param $bool
      */
-    public function getAddFileRefs($bool)
+    public function setAddReferencePosition($bool)
     {
-        $this->addFileRefs = $bool;
+        $this->addReferencePosition = $bool;
     }
 
     /**
@@ -148,6 +152,9 @@ class XliffDumper implements DumperInterface
             $idKey = hash('sha1', $id);
             $unit->setAttribute('id', $idKey);
             $unit->setAttribute('resname', $id);
+            if ($message instanceof XliffMessage && $message->isApproved()) {
+                $unit->setAttribute('approved', 'yes');
+            }
 
             if (isset($customAttributes[$idKey])) {
                 foreach ($customAttributes[$idKey] as $attribKey => $attribValue) {
@@ -160,6 +167,10 @@ class XliffDumper implements DumperInterface
                 $source->appendChild($doc->createCDATASection($message->getSourceString()));
             } else {
                 $source->appendChild($doc->createTextNode($message->getSourceString()));
+
+                if (preg_match("/\r\n|\n|\r|\t/", $message->getSourceString())) {
+                    $source->setAttribute('xml:space', 'preserve');
+                }
             }
 
             $unit->appendChild($target = $doc->createElement('target'));
@@ -167,25 +178,45 @@ class XliffDumper implements DumperInterface
                 $target->appendChild($doc->createCDATASection($message->getLocaleString()));
             } else {
                 $target->appendChild($doc->createTextNode($message->getLocaleString()));
+
+                if (preg_match("/\r\n|\n|\r|\t/", $message->getLocaleString())) {
+                    $target->setAttribute('xml:space', 'preserve');
+                }
             }
 
-            if ($message->isNew()) {
-                $target->setAttribute('state', 'new');
+            if ($message instanceof XliffMessage) {
+                if ($message->hasState()) {
+                    $target->setAttribute('state', $message->getState());
+                }
+
+                if ($message->hasNotes()) {
+                    foreach ($message->getNotes() as $note) {
+                        $noteNode = $unit->appendChild($doc->createElement('note', $note['text']));
+                        if (isset($note['from'])) {
+                            $noteNode->setAttribute('from', $note['from']);
+                        }
+                    }
+                }
+            } elseif ($message->isNew()) {
+                $target->setAttribute('state', XliffMessage::STATE_NEW);
             }
 
-            if ($this->addFileRefs) {
+            if ($this->addReference) {
                 // As per the OASIS XLIFF 1.2 non-XLIFF elements must be at the end of the <trans-unit>
                 if ($sources = $message->getSources()) {
-                    foreach ($sources as $source) {
+                    $sortedSources = $this->getSortedSources($sources);
+                    foreach ($sortedSources as $source) {
                         if ($source instanceof FileSource) {
                             $unit->appendChild($refFile = $doc->createElement('jms:reference-file', $source->getPath()));
 
-                            if ($source->getLine()) {
-                                $refFile->setAttribute('line', $source->getLine());
-                            }
+                            if ($this->addReferencePosition) {
+                                if ($source->getLine()) {
+                                    $refFile->setAttribute('line', $source->getLine());
+                                }
 
-                            if ($source->getColumn()) {
-                                $refFile->setAttribute('column', $source->getColumn());
+                                if ($source->getColumn()) {
+                                    $refFile->setAttribute('column', $source->getColumn());
+                                }
                             }
 
                             continue;
@@ -243,5 +274,41 @@ class XliffDumper implements DumperInterface
         }
 
         return $result;
+    }
+
+    /**
+     * Sort the sources by path-line-column
+     * If the reference position are not used, the reference file will be write once
+     *
+     * @param array $sources
+     * @return FileSource
+     */
+    protected function getSortedSources(array $sources)
+    {
+        $indexedSources = array();
+        foreach ($sources as $source) {
+            if ($source instanceof FileSource) {
+                $index = $source->getPath();
+
+                if ($this->addReferencePosition) {
+                    $index .= '-';
+                    if ($source->getLine()) {
+                        $index .= $source->getLine();
+                    }
+                    $index .= '-';
+                    if ($source->getColumn()) {
+                        $index .= $source->getColumn();
+                    }
+                }
+            } else {
+                $index = (string) $source;
+            }
+
+            $indexedSources[$index] = $source;
+        }
+
+        ksort($indexedSources);
+
+        return $indexedSources;
     }
 }

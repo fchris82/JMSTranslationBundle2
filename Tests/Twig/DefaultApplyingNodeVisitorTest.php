@@ -22,9 +22,10 @@ class DefaultApplyingNodeVisitorTest extends BaseTwigTestCase
 {
     public function testApply()
     {
-        $this->assertEquals(
-            $this->parse('apply_default_value_compiled.html.twig', true),
-            $this->parse('apply_default_value.html.twig', true)
-        );
+        $compiled = $this->parse('apply_default_value_compiled.html.twig', true);
+        $base = $this->parse('apply_default_value.html.twig', true);
+
+        $this->assertEquals($compiled->getNodeTag(), $base->getNodeTag());
+        $this->assertEquals($compiled->getIterator(), $base->getIterator());
     }
 }

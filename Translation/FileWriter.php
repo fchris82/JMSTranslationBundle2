@@ -53,7 +53,9 @@ class FileWriter
     public function write(MessageCatalogue $catalogue, $domain, $filePath, $format, $outputOptions)
     {
         if (!isset($this->dumpers[$format])) {
-            throw new InvalidArgumentException(sprintf('The format "%s" is not supported.', $format));
+            $allowedFormats = array_keys($this->dumpers);
+            $allowedFormatsString = join(',', $allowedFormats);
+            throw new InvalidArgumentException(sprintf('The format "%s" is not supported. Allowed formats:%s', $format, $allowedFormatsString));
         }
 
         // sort messages before dumping
@@ -68,7 +70,7 @@ class FileWriter
                 $dumper->setAddDate($outputOptions['add_date']);
             }
             if (isset($outputOptions['add_filerefs'])) {
-                $dumper->setAddFileRefs($outputOptions['add_filerefs']);
+                $dumper->setAddReference($outputOptions['add_filerefs']);
             }
         }
 

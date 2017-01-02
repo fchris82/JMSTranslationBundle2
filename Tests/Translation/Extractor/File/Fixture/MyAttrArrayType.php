@@ -1,5 +1,4 @@
 <?php
-
 /*
  * Copyright 2011 Johannes M. Schmitt <schmittjoh@gmail.com>
  *
@@ -16,15 +15,24 @@
  * limitations under the License.
  */
 
-namespace JMS\TranslationBundle\Tests\Twig;
+namespace JMS\TranslationBundle\Tests\Translation\Extractor\File\Fixture;
 
-class NormalizingNodeVisitorTest extends BaseTwigTestCase
+use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\FormBuilderInterface;
+
+class MyAttrArrayType extends AbstractType
 {
-    public function testBinaryConcatOfConstants()
+    public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $this->assertEquals(
-            $this->parse('binary_concat_of_constants_compiled.html.twig')->toXml(),
-            $this->parse('binary_concat_of_constants.html.twig')->toXml()
-        );
+        $attr = array('something'=>'whatever');
+
+        $builder
+            ->add('firstname', 'text', array(
+                'label' => 'form.label.firstname',
+            ))
+            ->add('field_with_attr_as_array','text',array(
+            'attr'=>$attr
+        ));
     }
+
 }

@@ -9,6 +9,7 @@ Differences:
 - Move meaning to `<note>` element
 - Custom translated form fields
 - Add new configurations: `output_options` -> `add_date` and `add_filerefs`
+- Handle `addViolation()`, `addViolationAt()` and `buildViolation()` functions
 
 JMSTranslationBundle [![Build Status](https://secure.travis-ci.org/schmittjoh/JMSTranslationBundle.png?branch=master)](http://travis-ci.org/schmittjoh/JMSTranslationBundle) [![Join the chat at https://gitter.im/schmittjoh/JMSTranslationBundle](https://badges.gitter.im/schmittjoh/JMSTranslationBundle.svg)](https://gitter.im/schmittjoh/JMSTranslationBundle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ====================
