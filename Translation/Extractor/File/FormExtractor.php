@@ -19,7 +19,6 @@
 namespace JMS\TranslationBundle\Translation\Extractor\File;
 
 use JMS\TranslationBundle\Exception\RuntimeException;
-use JMS\TranslationBundle\Model\FileSource;
 use JMS\TranslationBundle\Model\Message;
 use JMS\TranslationBundle\Annotation\Meaning;
 use JMS\TranslationBundle\Annotation\Desc;
@@ -28,6 +27,7 @@ use Doctrine\Common\Annotations\DocParser;
 use JMS\TranslationBundle\Model\MessageCatalogue;
 use JMS\TranslationBundle\Translation\Extractor\FileVisitorInterface;
 use JMS\TranslationBundle\Logger\LoggerAwareInterface;
+use JMS\TranslationBundle\Translation\FileSourceFactory;
 use PhpParser\Comment\Doc;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
@@ -37,6 +37,11 @@ use Symfony\Component\HttpKernel\Kernel;
 
 class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeVisitor
 {
+    /**
+     * @var FileSourceFactory
+     */
+    private $fileSourceFactory;
+
     /**
      * @var DocParser
      */
@@ -48,7 +53,7 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
     private $traverser;
 
     /**
-     * @var string
+     * @var \SplFileInfo
      */
     private $file;
 
@@ -92,13 +97,19 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
     private $customTranslatedFields = [];
 
     /**
+     * @var null|array
+     */
+    private $customTranslatedFieldsCache;
+
+    /**
      * FormExtractor constructor.
      * @param DocParser $docParser
+     * @param FileSourceFactory $fileSourceFactory
      */
-    public function __construct(DocParser $docParser)
+    public function __construct(DocParser $docParser, FileSourceFactory $fileSourceFactory)
     {
         $this->docParser = $docParser;
-
+        $this->fileSourceFactory = $fileSourceFactory;
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor($this);
     }
@@ -125,7 +136,7 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
 
     /**
      * @param Node $node
-     * @return null
+     * @return null|Node|void
      */
     public function enterNode(Node $node)
     {
@@ -148,20 +159,7 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
 
         if ($node instanceof Node\Expr\Array_) {
             // first check if a translation_domain is set for this field
-            $domain = null;
-            foreach ($node->items as $item) {
-                if (!$item->key instanceof Node\Scalar\String_) {
-                    continue;
-                }
-
-                if ('translation_domain' === $item->key->value) {
-                    if (!$item->value instanceof Node\Scalar\String_) {
-                        continue;
-                    }
-
-                    $domain = $item->value->value;
-                }
-            }
+            $domain = $this->getDomain($node);
 
             // look for options containing a message
             foreach ($node->items as $item) {
@@ -169,131 +167,239 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
                     continue;
                 }
 
-                if ('empty_value' === $item->key->value && $item->value instanceof Node\Expr\ConstFetch
-                    && $item->value->name instanceof Node\Name && 'false' === $item->value->name->parts[0]) {
-                    continue;
-                }
-                if ('empty_value' === $item->key->value && $item->value instanceof Node\Expr\Array_) {
-                    foreach ($item->value->items as $sitem) {
-                        $this->parseItem($sitem, $domain);
-                    }
-                    continue;
-                }
-
-                if ('placeholder' === $item->key->value && $item->value instanceof Node\Expr\ConstFetch
-                    && $item->value->name instanceof Node\Name && 'false' === $item->value->name->parts[0]) {
-                    continue;
-                }
-                if ('placeholder' === $item->key->value && $item->value instanceof Node\Expr\Array_) {
-                    foreach ($item->value->items as $sitem) {
-                        $this->parseItem($sitem, $domain);
-                    }
-                    continue;
-                }
-
-                if ('choices' === $item->key->value && !$item->value instanceof Node\Expr\Array_) {
-                    continue;
-                }
-
-                if ('constraints' === $item->key->value && !$item->value instanceof Node\Expr\Array_) {
-                    continue;
-                }
-
-                $enabledKeys = array_unique(array_merge([
-                    'label',
-                    'empty_value',
-                    'placeholder',
-                    'choices',
-                    'invalid_message',
-                    'attr',
-                    'constraints',
-                    'title',
-                ], $this->customTranslatedFields));
-                if (!in_array($item->key->value, $enabledKeys)) {
-                    continue;
-                }
-
-                if ('choices' === $item->key->value) {
-
-                    //Checking for the choice_as_values in the same form item
-                    $choicesAsValues = false;
-                    foreach ($node->items as $choiceItem) {
-                        if ($choiceItem->key !== null && 'choices_as_values' === $choiceItem->key->value) {
-                            $choicesAsValues = ($choiceItem->value->name->parts[0] === 'true');
+                switch ($item->key->value) {
+                    case 'label':
+                        $this->parseItem($item, $domain);
+                        break;
+                    case 'invalid_message':
+                        $this->parseItem($item, 'validators');
+                        break;
+                    case 'placeholder':
+                    case 'empty_value':
+                        if ($this->parseEmptyValueNode($item, $domain)) {
+                            continue 2;
                         }
-                    }
-
-                    foreach ($item->value->items as $sitem) {
-                        // If we have a choice as value that differ from the Symfony default strategy
-                        // we should invert the key and the value
-                        if (Kernel::VERSION_ID < 30000 && $choicesAsValues === true || Kernel::VERSION_ID >= 30000) {
-                            $newItem = clone $sitem;
-                            $newItem->key = $sitem->value;
-                            $newItem->value = $sitem->key;
-                            $sitem = $newItem;
+                        $this->parseItem($item, $domain);
+                        break;
+                    case 'choices':
+                        if ($this->parseChoiceNode($item, $node, $domain)) {
+                            continue 2;
                         }
-
-                        if(isset($sitem->key)) {
-                            $this->parseItem($sitem, $domain);
+                        $this->parseItem($item, $domain);
+                        break;
+                    case 'constraints':
+                        if ($this->parseConstraintsNode($item, $node, $domain)) {
+                            continue 2;
                         }
-                    }
-                } elseif ('attr' === $item->key->value && is_array($item->value->items)) {
-                    // Amennyiben egy függvény van hívva (pl array_merge), akkor az argumentumokat
-                    // bejárjuk és ha találunk tömböt, akkor azokban megkeressük a megfelelő - placeholder,
-                    // title - elemeket és kigyűjtjük.
-                    if($item->value instanceof Node\Expr\FuncCall && count($item->value->args) > 0) {
-                        foreach($item->value->args as $arg) {
-                            if($arg->value instanceof Node\Expr\Array_) {
-                                foreach($arg->value->items as $sitem) {
-                                    if ('placeholder' == $sitem->key->value){
-                                        $this->parseItem($sitem, $domain);
-                                    }
-                                    if('title' == $sitem->key->value) {
+                        $this->parseItem($item, $domain);
+                        break;
+                    case 'attr':
+                        if ($this->parseAttrNode($item, $domain)) {
+                            continue 2;
+                        }
+                        $this->parseItem($item, $domain);
+                        break;
+                    default:
+                        if ($this->isCustomTranslatedField($item->key->value)) {
+                            if ($item->value instanceof Node\Expr\Array_) {
+                                foreach ($item->value->items as $sitem) {
+                                    if ($sitem->value instanceof Node\Scalar\String_) {
                                         $this->parseItem($sitem, $domain);
                                     }
                                 }
+                            } else {
+                                $this->parseItem($item, $domain);
                             }
                         }
-                        // Ha nem, akkor feltételezzük, hogy tömböt kaptunk
-                    } elseif (is_array($item->value->items)) {
-                        foreach ($item->value->items as $sitem) {
-                            if ('placeholder' == $sitem->key->value) {
-                                $this->parseItem($sitem, $domain);
-                            }
-                            if ('title' == $sitem->key->value) {
-                                $this->parseItem($sitem, $domain);
-                            }
-                        }
-                    }
-                } elseif ('constraints' === $item->key->value ) {
-                    // végigmegyünk a constraints objektumokon
-                    foreach ($item->value->items as $sitem) {
-                        if(isset($sitem->value->args[0])) {
-                            // Kiolvassuk az első paramétert
-                            $parameter = $sitem->value->args[0];
-                            // Ha az első paraméter tömb...
-                            if($parameter->value instanceof Node\Expr\Array_) {
-                                foreach($parameter->value->items as $pitem) {
-                                    if ('message' == $pitem->key->value){
-                                        $this->parseItem($pitem, 'validators');
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } elseif ('invalid_message' === $item->key->value) {
-                    $this->parseItem($item, 'validators');
-                } elseif ($item->value instanceof Node\Expr\Array_) {
-                    foreach ($item->value->items as $sitem) {
-                        if($sitem->value instanceof Node\Scalar\String_) {
-                            $this->parseItem($sitem, $domain);
-                        }
-                    }
-                } else {
-                    $this->parseItem($item, $domain);
                 }
             }
         }
+    }
+
+    /**
+     * @param Node $node
+     * @return null|string
+     */
+    public function getDomain(Node $node)
+    {
+        $domain = null;
+
+        foreach ($node->items as $item) {
+            if (!$item->key instanceof Node\Scalar\String_) {
+                continue;
+            }
+
+            if ('translation_domain' === $item->key->value) {
+                if (!$item->value instanceof Node\Scalar\String_) {
+                    continue;
+                }
+
+                $domain = $item->value->value;
+            }
+        }
+
+        return $domain;
+    }
+
+    /**
+     * This parses any Node of type empty_value.
+     *
+     * Returning true means either that regardless of whether
+     * parsing has occurred or not, the enterNode function should move on to the next node item.
+     *
+     * @param Node $item
+     * @param $domain
+     * @return bool
+     * @internal
+     */
+    protected function parseEmptyValueNode(Node $item, $domain)
+    {
+        // Skip empty_value when false
+        if ($item->value instanceof Node\Expr\ConstFetch && $item->value->name instanceof Node\Name && 'false' === $item->value->name->parts[0]) {
+            return true;
+        }
+
+        // Parse when its value is an array of values
+        if ($item->value instanceof Node\Expr\Array_) {
+            foreach ($item->value->items as $subItem) {
+                $this->parseItem($subItem, $domain);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * This parses any Node of type choices.
+     *
+     * Returning true means either that regardless of whether
+     * parsing has occurred or not, the enterNode function should move on to the next node item.
+     *
+     * @param Node $item
+     * @param Node $node
+     * @param $domain
+     * @return bool
+     * @internal
+     */
+    protected function parseChoiceNode(Node $item, Node $node, $domain)
+    {
+        // Skip any choices that aren't arrays (ChoiceListInterface or Closure etc)
+        if (!$item->value instanceof Node\Expr\Array_) {
+            return true;
+        }
+
+        //Checking for the choice_as_values in the same form item
+        $choicesAsValues = false;
+        foreach ($node->items as $choiceItem) {
+            if ($choiceItem->key !== null && 'choices_as_values' === $choiceItem->key->value) {
+                $choicesAsValues = ($choiceItem->value->name->parts[0] === 'true');
+            }
+        }
+
+        foreach ($item->value->items as $subItem) {
+            // If we have a choice as value that differ from the Symfony default strategy
+            // we should invert the key and the value
+            if (Kernel::VERSION_ID < 30000 && $choicesAsValues === true || Kernel::VERSION_ID >= 30000) {
+                $newItem = clone $subItem;
+                $newItem->key = $subItem->value;
+                $newItem->value = $subItem->key;
+                $subItem = $newItem;
+            }
+            $this->parseItem($subItem, $domain);
+        }
+
+        return true;
+    }
+
+    public function parseConstraintsNode(Node $item, Node $node, $domain)
+    {
+        if (!$item->value instanceof Node\Expr\Array_) {
+            return true;
+        }
+
+        // végigmegyünk a constraints objektumokon
+        foreach ($item->value->items as $subItem) {
+            if(isset($subItem->value->args[0])) {
+                // Kiolvassuk az első paramétert
+                $parameter = $subItem->value->args[0];
+                // Ha az első paraméter tömb...
+                if($parameter->value instanceof Node\Expr\Array_) {
+                    foreach($parameter->value->items as $parameterItem) {
+                        if ('message' == $parameterItem->key->value){
+                            $this->parseItem($parameterItem, 'validators');
+                        }
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * This parses any Node of type attr
+     *
+     * Returning true means either that regardless of whether
+     * parsing has occurred or not, the enterNode function should move on to the next node item.
+     *
+     * @param Node $item
+     * @param $domain
+     * @return bool
+     * @internal
+     */
+    protected function parseAttrNode(Node $item, $domain)
+    {
+        if (!$item->value instanceof Node\Expr\Array_) {
+            return true;
+        }
+
+        // Amennyiben egy függvény van hívva (pl array_merge), akkor az argumentumokat
+        // bejárjuk és ha találunk tömböt, akkor azokban megkeressük a megfelelő - placeholder,
+        // title - elemeket és kigyűjtjük.
+        if($item->value instanceof Node\Expr\FuncCall && count($item->value->args) > 0) {
+            foreach($item->value->args as $arg) {
+                $this->parseAttrNode($arg, $domain);
+            }
+            // Ha nem, akkor feltételezzük, hogy tömböt kaptunk
+        } elseif (is_array($item->value->items)) {
+            foreach ($item->value->items as $subItem) {
+                if ('placeholder' == $subItem->key->value) {
+                    $this->parseItem($subItem, $domain);
+                }
+                if ('title' == $subItem->key->value) {
+                    $this->parseItem($subItem, $domain);
+                }
+            }
+        }
+
+        return true;
+    }
+
+    protected function isCustomTranslatedField($fieldName)
+    {
+        $enabledKeys = $this->getCustomTranslatedFields();
+
+        return in_array($fieldName, $enabledKeys);
+    }
+
+    protected function getCustomTranslatedFields()
+    {
+        if (!$this->customTranslatedFieldsCache) {
+            $this->customTranslatedFieldsCache = array_unique(array_merge([
+                'label',
+                'empty_value',
+                'placeholder',
+                'choices',
+                'invalid_message',
+                'attr',
+                'constraints',
+                'title',
+            ], $this->customTranslatedFields));
+        }
+
+        return $this->customTranslatedFieldsCache;
     }
 
     /**
@@ -400,7 +506,7 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
             throw new RuntimeException($message);
         }
 
-        $source = new FileSource((string) $this->file, $item->value->getLine());
+        $source = $this->fileSourceFactory->create($this->file, $item->value->getLine());
         $id = $item->value->value;
 
         if (null === $domain) {

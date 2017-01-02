@@ -75,11 +75,11 @@ class MessageCatalogue
     /**
      * @param Message $message
      */
-    public function set(Message $message)
+    public function set(Message $message, $force = false)
     {
         $this
             ->getOrCreateDomain($message->getDomain())
-            ->set($message)
+            ->set($message, $force)
         ;
     }
 

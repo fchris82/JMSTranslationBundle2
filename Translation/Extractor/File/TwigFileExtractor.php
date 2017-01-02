@@ -19,14 +19,19 @@
 namespace JMS\TranslationBundle\Translation\Extractor\File;
 
 use JMS\TranslationBundle\Exception\RuntimeException;
+use JMS\TranslationBundle\Translation\FileSourceFactory;
 use Symfony\Bridge\Twig\Node\TransNode;
-use JMS\TranslationBundle\Model\FileSource;
 use JMS\TranslationBundle\Model\Message;
 use JMS\TranslationBundle\Model\MessageCatalogue;
 use JMS\TranslationBundle\Translation\Extractor\FileVisitorInterface;
 
 class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterface
 {
+    /**
+     * @var FileSourceFactory
+     */
+    private $fileSourceFactory;
+
     /**
      * @var \SplFileInfo
      */
@@ -50,9 +55,11 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
     /**
      * TwigFileExtractor constructor.
      * @param \Twig_Environment $env
+     * @param FileSourceFactory $fileSourceFactory
      */
-    public function __construct(\Twig_Environment $env)
+    public function __construct(\Twig_Environment $env, FileSourceFactory $fileSourceFactory)
     {
+        $this->fileSourceFactory = $fileSourceFactory;
         $this->traverser = new \Twig_NodeTraverser($env, array($this));
     }
 
@@ -68,12 +75,13 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
         if ($node instanceof TransNode) {
             $id = $node->getNode('body')->getAttribute('data');
             $domain = 'messages';
-            if (null !== $domainNode = $node->getNode('domain')) {
+            // Older version of Symfony are storing null in the node instead of omitting it
+            if ($node->hasNode('domain') && null !== $domainNode = $node->getNode('domain')) {
                 $domain = $domainNode->getAttribute('value');
             }
 
             $message = new Message($id, $domain);
-            $message->addSource(new FileSource((string) $this->file, $node->getLine()));
+            $message->addSource($this->fileSourceFactory->create($this->file, $node->getLine()));
             // Placeholders
             foreach($node->getNode('vars') as $n => $var) {
                 if($n%2 == 1) {
@@ -110,7 +118,7 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
                 }
 
                 $message = new Message($id, $domain);
-                $message->addSource(new FileSource((string) $this->file, $node->getLine()));
+                $message->addSource($this->fileSourceFactory->create($this->file, $node->getLine()));
 
                 // Placeholders
                 $index--;

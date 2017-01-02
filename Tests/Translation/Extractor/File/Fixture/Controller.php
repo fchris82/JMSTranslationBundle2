@@ -49,7 +49,7 @@ class Controller
     {
         $this->session->setFlash('bar',
             /** @Desc("Welcome %name%! Thanks for signing up.") */
-            $this->translator->trans('text.sign_up_successful', array('name' => 'Johannes')));
+            $this->translator->trans('text.sign_up_successful', array('%name%' => 'Johannes')));
     }
 
     public function foobarAction()

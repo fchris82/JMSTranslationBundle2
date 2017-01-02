@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-namespace JMS\TranslationBundle\Tests\Twig;
-
-class NormalizingNodeVisitorTest extends BaseTwigTestCase
+namespace
 {
-    public function testBinaryConcatOfConstants()
+    class SomeRandomClassNameWhichIsnTUsedAnywhereJMSTranslatorTest
     {
-        $this->assertEquals(
-            $this->parse('binary_concat_of_constants_compiled.html.twig')->toXml(),
-            $this->parse('binary_concat_of_constants.html.twig')->toXml()
-        );
+        private $translator;
+
+        public function method()
+        {
+            return /** @Desc("Bar") */ $this->translator->trans('globalnamespace.foo');
+        }
     }
 }
