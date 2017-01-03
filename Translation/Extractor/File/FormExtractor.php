@@ -327,7 +327,7 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
                 // Ha az első paraméter tömb...
                 if($parameter->value instanceof Node\Expr\Array_) {
                     foreach($parameter->value->items as $parameterItem) {
-                        if ('message' == $parameterItem->key->value){
+                        if ($parameterItem->key && 'message' == $parameterItem->key->value){
                             $this->parseItem($parameterItem, 'validators');
                         }
                     }

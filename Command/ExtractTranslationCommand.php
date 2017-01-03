@@ -20,6 +20,7 @@ namespace JMS\TranslationBundle\Command;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Doctrine\Common\Annotations\DocParser;
+use Doctrine\Common\Annotations\Reader;
 use JMS\TranslationBundle\Translation\ConfigBuilder;
 use JMS\TranslationBundle\Exception\RuntimeException;
 use Symfony\Component\Console\Input\InputArgument;
@@ -150,32 +151,33 @@ class ExtractTranslationCommand extends ContainerAwareCommand
      */
     protected function fixIgnoreAnnotationBug()
     {
+        /** @var Reader $annotationReader */
         $annotationReader = $this->getContainer()->get('annotation_reader');
-        $reflectionClass = new \ReflectionClass(get_class($annotationReader));
-        if ($reflectionClass->hasProperty('delegate')) {
-            $annotationReader = $this->getProtectedProperty($annotationReader, 'delegate');
+        $readerProperty = $this->findPropertyTypeIfExists($annotationReader, Reader::class);
+        if ($readerProperty) {
+            $annotationReader = $readerProperty;
         }
         /** @var DocParser $parser */
-        $parser = $this->getProtectedProperty($annotationReader, 'parser');
+        $parser = $this->findPropertyTypeIfExists($annotationReader, DocParser::class);
+        if (!$parser) {
+            throw new \Exception('There isn\'t DocParser property, something went wrong!');
+        }
         $parser->setIgnoreNotImportedAnnotations(true);
     }
 
-    /**
-     * The self::fixIgnoreAnnotationBug() uses it only.
-     *
-     * @param object $object
-     * @param string $propertyName
-     * @return mixed
-     *
-     * @see \JMS\TranslationBundle\Command\ExtractTranslationCommand::fixIgnoreAnnotationBug()
-     */
-    protected function getProtectedProperty($object, $propertyName)
+    protected function findPropertyTypeIfExists($object, $class)
     {
         $reflectionClass = new \ReflectionClass(get_class($object));
-        $reflectionProperty = $reflectionClass->getProperty($propertyName);
-        $reflectionProperty->setAccessible(true);
+        foreach ($reflectionClass->getProperties() as $reflectionProperty) {
+            $reflectionProperty->setAccessible(true);
+            $property = $reflectionProperty->getValue($object);
 
-        return $reflectionProperty->getValue($object);
+            if (is_a($property, $class)) {
+                return $property;
+            }
+        }
+
+        return false;
     }
 
     /**
