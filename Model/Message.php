@@ -317,6 +317,10 @@ class Message
         }
 
         $this->setNew($message->isNew());
+
+        foreach ($message->getPlaceholders() as $placeholder) {
+            $this->addPlaceholder($placeholder);
+        }
     }
 
     /**
@@ -383,6 +387,10 @@ class Message
 
         if (!$this->getLocaleString()) {
             $this->localeString = $message->getLocaleString();
+        }
+
+        foreach ($message->getPlaceholders() as $placeholder) {
+            $this->addPlaceholder($placeholder);
         }
     }
 
