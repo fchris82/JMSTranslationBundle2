@@ -158,12 +158,12 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             $id = $node->args[0]->value->value;
 
             // domain index
-            $index = 'trans' === strtolower($node->name) ? 2 : 3;
+            $domain_index = 'trans' === strtolower($node->name) ? 2 : 3;
             // $domain exists and not null!
-            if (isset($node->args[$index])
-                && !($node->args[$index]->value instanceof Node\Expr\ConstFetch && $node->args[$index]->value->name == "null")
+            if (isset($node->args[$domain_index])
+                && !($node->args[$domain_index]->value instanceof Node\Expr\ConstFetch && $node->args[$domain_index]->value->name == "null")
             ) {
-                if (!$node->args[$index]->value instanceof String_) {
+                if (!$node->args[$domain_index]->value instanceof String_) {
                     if ($ignore) {
                         return;
                     }
@@ -178,7 +178,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
                     throw new RuntimeException($message);
                 }
 
-                $domain = $node->args[$index]->value->value;
+                $domain = $node->args[$domain_index]->value->value;
             } else {
                 $domain = 'messages';
             }
@@ -189,10 +189,10 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             $message->addSource($this->fileSourceFactory->create($this->file, $node->getLine()));
 
             // `parameters` index
-            $index--;
-            if(isset($node->args[$index])) {
-                if($node->args[$index]->value instanceof Node\Expr\Array_) {
-                    foreach($node->args[$index]->value->items as $item) {
+            $parameterIndex = $domain_index-1;
+            if(isset($node->args[$parameterIndex])) {
+                if($node->args[$parameterIndex]->value instanceof Node\Expr\Array_) {
+                    foreach($node->args[$parameterIndex]->value->items as $item) {
                         $message->addPlaceholder($item->key->value);
                     }
                 }
@@ -200,8 +200,8 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
         } elseif(strpos(strtolower($node->name), 'violation')!==false && count($node->args)>0) {
             $domain = 'validators';
 
-            $id_index = (strtolower($node->name) === 'addviolationat') ? 1 : 0;
-            if (!$node->args[$id_index]->value instanceof String_) {
+            $idIndex = (strtolower($node->name) === 'addviolationat') ? 1 : 0;
+            if (!$node->args[$idIndex]->value instanceof String_) {
                 if ($ignore) {
                     return;
                 }
@@ -216,7 +216,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
                 throw new RuntimeException($message);
             }
 
-            $id = $node->args[$id_index]->value->value;
+            $id = $node->args[$idIndex]->value->value;
 
             $message = new Message($id, $domain);
             $message->setDesc($desc);
@@ -224,7 +224,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             $message->addSource($this->fileSourceFactory->create($this->file, $node->getLine()));
 
             // `parameters` index
-            $index = $id_index + 1;
+            $index = $idIndex + 1;
             if(isset($node->args[$index])) {
                 if($node->args[$index]->value instanceof Node\Expr\Array_) {
                     foreach($node->args[$index]->value->items as $item) {
