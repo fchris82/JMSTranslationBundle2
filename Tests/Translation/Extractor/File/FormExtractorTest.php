@@ -56,6 +56,7 @@ class FormExtractorTest extends BasePhpFileExtractorTest
         $message = new Message('form.choice_empty_value');
         $message->setDesc('Choice field with an empty_value');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 40));
+        $message->addAlternativeTranslation('en', 'Empty field');
         $expected->add($message);
 
         $this->assertEquals($expected, $this->extract('MyPlaceholderFormType.php'));
@@ -218,6 +219,7 @@ class FormExtractorTest extends BasePhpFileExtractorTest
         $message = new Message('form.label.street', 'address');
         $message->setDesc('Street');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 37));
+        $message->addAlternativeTranslation('en', 'Street');
         $expected->add($message);
 
         $this->assertEquals($expected, $this->extract('MyFormTypeWithDefaultDomain.php'));

@@ -119,6 +119,68 @@ EOF;
     }
 
     /**
+     * Test existing alternative translation with different language --> nothing
+     */
+    public function testDumpAlternativeTranslation1()
+    {
+        $catalogue = new MessageCatalogue();
+        $catalogue->setLocale('en');
+
+        $message = new Message('foo');
+        $message->addAlternativeTranslation('de', 'der Foo');
+        $catalogue->add($message);
+
+        $this->assertEquals($this->getOutput('simple'), $this->getDumper()->dump($catalogue, 'messages'));
+    }
+
+    /**
+     * Test existing alternative translation --> changing
+     */
+    public function testDumpAlternativeTranslation2a()
+    {
+        $catalogue = new MessageCatalogue();
+        $catalogue->setLocale('en');
+
+        $message = new Message('foo');
+        $message->addAlternativeTranslation('en', 'alternate');
+        $catalogue->add($message);
+
+        $this->assertEquals($this->getOutput('alternative_translation'), $this->getDumper()->dump($catalogue, 'messages'));
+    }
+
+    /**
+     * Test existing alternative translation --> changing
+     */
+    public function testDumpAlternativeTranslation2b()
+    {
+        $catalogue = new MessageCatalogue();
+        $catalogue->setLocale('en');
+
+        $message = new Message('foo');
+        $message->setLocaleString('foo');
+        $message->addAlternativeTranslation('en', 'alternate');
+        $catalogue->add($message);
+
+        $this->assertEquals($this->getOutput('alternative_translation'), $this->getDumper()->dump($catalogue, 'messages'));
+    }
+
+    /**
+     * Test existing alternative translation, with translated message --> nothing
+     */
+    public function testDumpAlternativeTranslation3()
+    {
+        $catalogue = new MessageCatalogue();
+        $catalogue->setLocale('en');
+
+        $message = new Message('foo');
+        $message->setLocaleString('alternate');
+        $message->addAlternativeTranslation('en', 'original alternate');
+        $catalogue->add($message);
+
+        $this->assertEquals($this->getOutput('alternative_translation'), $this->getDumper()->dump($catalogue, 'messages'));
+    }
+
+    /**
      * Get the catalogue used for the structure tests
      *
      * @return MessageCatalogue

@@ -64,6 +64,7 @@ abstract class BasePhpFileExtractorTest extends \PHPUnit_Framework_TestCase
             'desc' => 'JMS\TranslationBundle\Annotation\Desc',
             'meaning' => 'JMS\TranslationBundle\Annotation\Meaning',
             'ignore' => 'JMS\TranslationBundle\Annotation\Ignore',
+            'alttrans' => 'JMS\TranslationBundle\Annotation\AltTrans',
         ));
         $docParser->setIgnoreNotImportedAnnotations(true);
 

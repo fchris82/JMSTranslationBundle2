@@ -81,4 +81,10 @@ class Controller
         /** @Desc("The var %foo% should be assigned.") */
         return $this->translator->trans('text.var.assign', array('%foo%' => 'fooVar'));
     }
+
+    public function testAlternativeTranslations()
+    {
+        /** @AltTrans("This is the alternative <a href=""http://example.com"">translations &raquo;</a>", locale="en") */
+        return $this->translator->trans('text.alternative.en', array('%bar%' => 'barVar'));
+    }
 }

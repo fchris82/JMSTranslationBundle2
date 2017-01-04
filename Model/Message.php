@@ -76,6 +76,13 @@ class Message
     protected $placeholders = array();
 
     /**
+     * The key is the `locale` value, the value is the `translation`
+     *
+     * @var array
+     */
+    protected $alternativeTranslations = array();
+
+    /**
      * @static
      *
      * @param $id
@@ -422,6 +429,40 @@ class Message
     public function getPlaceholders()
     {
         return $this->placeholders;
+    }
+
+    public function getAlternativeTranslation($locale, $default = null)
+    {
+        return array_key_exists($locale, $this->alternativeTranslations)
+            ? $this->alternativeTranslations[$locale]
+            : $default;
+    }
+
+    /**
+     * @return array
+     */
+    public function getAlternativeTranslations()
+    {
+        return $this->alternativeTranslations;
+    }
+
+    /**
+     * @param array $alternativeTranslations
+     *
+     * @return $this
+     */
+    public function setAlternativeTranslations($alternativeTranslations)
+    {
+        $this->alternativeTranslations = $alternativeTranslations;
+
+        return $this;
+    }
+
+    public function addAlternativeTranslation($locale, $translation)
+    {
+        $this->alternativeTranslations[$locale] = $translation;
+
+        return $this;
     }
 
     /**

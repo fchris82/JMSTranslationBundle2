@@ -10,6 +10,16 @@ Differences:
 - Custom translated form fields
 - Add new configurations: `output_options` -> `add_date` and `add_filerefs`
 - Handle `addViolation()`, `addViolationAt()` and `buildViolation()` functions
+- Add new Annotation: `AltTrans` . You can add basic translations:
+
+```php
+<?php
+
+/** @AltTrans("User has been created: <a href=""mailto:%email%"">%email%</a>", locale="en") */
+$this->trans('user.create.success.%email%', ['%email%' => $user->getEmail()]);
+```
+
+> The double `""` sign is the escaped `"` in the `AltTrans` annotation value.
 
 JMSTranslationBundle [![Build Status](https://secure.travis-ci.org/schmittjoh/JMSTranslationBundle.png?branch=master)](http://travis-ci.org/schmittjoh/JMSTranslationBundle) [![Join the chat at https://gitter.im/schmittjoh/JMSTranslationBundle](https://badges.gitter.im/schmittjoh/JMSTranslationBundle.svg)](https://gitter.im/schmittjoh/JMSTranslationBundle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ====================
