@@ -191,7 +191,12 @@ class XliffDumper implements DumperInterface
 
                 if ($message->hasNotes()) {
                     foreach ($message->getNotes() as $note) {
-                        $noteNode = $unit->appendChild($doc->createElement('note', $note['text']));
+                        $noteNode = $unit->appendChild($doc->createElement('note'));
+                        if (preg_match('/[<>&]/', $note['text'])) {
+                            $noteNode->appendChild($doc->createCDATASection($note['text']));
+                        } else {
+                            $noteNode->appendChild($doc->createTextNode($note['text']));
+                        }
                         if (isset($note['from'])) {
                             $noteNode->setAttribute('from', $note['from']);
                         }
@@ -234,7 +239,12 @@ class XliffDumper implements DumperInterface
             }
 
             if ($meaning = $message->getMeaning()) {
-                $unit->appendChild($doc->createElement('note', $meaning));
+                $unit->appendChild($meaningNode = $doc->createElement('note'));
+                if (preg_match('/[<>&]/', $meaning)) {
+                    $meaningNode->appendChild($doc->createCDATASection($meaning));
+                } else {
+                    $meaningNode->appendChild($doc->createTextNode($meaning));
+                }
             }
         }
 
