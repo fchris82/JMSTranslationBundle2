@@ -328,6 +328,11 @@ class Message
         foreach ($message->getPlaceholders() as $placeholder) {
             $this->addPlaceholder($placeholder);
         }
+
+        $this->setAlternativeTranslations(array_merge(
+            $message->getAlternativeTranslations(),
+            $this->getAlternativeTranslations()
+        ));
     }
 
     /**
@@ -399,6 +404,11 @@ class Message
         foreach ($message->getPlaceholders() as $placeholder) {
             $this->addPlaceholder($placeholder);
         }
+
+        $this->setAlternativeTranslations(array_merge(
+            $message->getAlternativeTranslations(),
+            $this->getAlternativeTranslations()
+        ));
     }
 
     /**
