@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <container xmlns="http://symfony.com/schema/dic/services"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <parameters>
         <parameter key="jms_translation.twig_extension.class">JMS\TranslationBundle\Twig\TranslationExtension</parameter>
@@ -123,6 +123,7 @@
                     <argument key="desc">JMS\TranslationBundle\Annotation\Desc</argument>
                     <argument key="meaning">JMS\TranslationBundle\Annotation\Meaning</argument>
                     <argument key="ignore">JMS\TranslationBundle\Annotation\Ignore</argument>
+                    <argument key="alttrans">JMS\TranslationBundle\Annotation\AltTrans</argument>
                 </argument>
             </call>
             <call method="setIgnoreNotImportedAnnotations">

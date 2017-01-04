@@ -23,12 +23,12 @@ use JMS\TranslationBundle\Model\Message;
 
 /**
  * Represents an _existing_ message from an XLIFF-file.
- * 
+ *
  * Currently supports preservation of:
  * - note-elements (as child of trans-unit element)
  * - attribute trans-unit['approved']
  * - attribute target['state']
- * 
+ *
  * @see http://docs.oasis-open.org/xliff/v1.2/os/xliff-core.html
  *
  * @author Dieter Peeters <peetersdiet@gmail.com>
@@ -272,6 +272,15 @@ class XliffMessage extends Message
             if (!$this->getLocaleString()) {
                 $this->setLocaleString($message->getLocaleString());
             }
+
+            foreach ($message->getPlaceholders() as $placeholder) {
+                $this->addPlaceholder($placeholder);
+            }
+
+            $this->setAlternativeTranslations(array_merge(
+                $message->getAlternativeTranslations(),
+                $this->getAlternativeTranslations()
+            ));
         }
         $this->mergeXliffMeta($message, $oldDesc);
     }
