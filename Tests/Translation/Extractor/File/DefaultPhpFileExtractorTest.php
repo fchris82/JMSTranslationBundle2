@@ -64,6 +64,12 @@ class DefaultPhpFileExtractorTest extends BasePhpFileExtractorTest
         $message->addPlaceholder('%foo%');
         $expected->add($message);
 
+        $message = new Message('text.alternative.en');
+        $message->addSource($fileSourceFactory->create($fixtureSplInfo, 88));
+        $message->addPlaceholder('%bar%');
+        $message->addAlternativeTranslation('en', 'This is the alternative <a href="http://example.com">translations &raquo;</a>');
+        $expected->add($message);
+
         $this->assertEquals($expected, $catalogue);
     }
 

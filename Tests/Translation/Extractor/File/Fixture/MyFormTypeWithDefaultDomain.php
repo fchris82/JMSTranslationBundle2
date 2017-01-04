@@ -34,7 +34,7 @@ class MyFormType extends AbstractType
                 'label' => /** @Desc("Lastname") */ 'form.label.lastname',
             ))
             ->add('street', 'text', array(
-                'label' => /** @Desc("Street") */ 'form.label.street',
+                'label' => /** @Desc("Street") @AltTrans("Street", locale="en") */ 'form.label.street',
                 'translation_domain' => 'address'
             ))
         ;

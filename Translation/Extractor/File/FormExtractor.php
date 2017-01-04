@@ -18,6 +18,7 @@
 
 namespace JMS\TranslationBundle\Translation\Extractor\File;
 
+use JMS\TranslationBundle\Annotation\AltTrans;
 use JMS\TranslationBundle\Exception\RuntimeException;
 use JMS\TranslationBundle\Model\Message;
 use JMS\TranslationBundle\Annotation\Meaning;
@@ -462,6 +463,7 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
         // get doc comment
         $ignore = false;
         $desc = $meaning = $docComment = null;
+        $alternativeTranslations = [];
 
         if ($item->key) {
             $docComment = $item->key->getDocComment();
@@ -484,6 +486,8 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
                     $desc = $annot->text;
                 } elseif ($annot instanceof Meaning) {
                     $meaning = $annot->text;
+                } elseif ($annot instanceof AltTrans) {
+                    $alternativeTranslations[$annot->locale] = $annot->text;
                 }
             }
         }
@@ -514,10 +518,11 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
                 'id' => $id,
                 'source' => $source,
                 'desc' => $desc,
-                'meaning' => $meaning
+                'meaning' => $meaning,
+                'alternativeTranslations' => $alternativeTranslations,
             );
         } else {
-            $this->addToCatalogue($id, $source, $domain, $desc, $meaning);
+            $this->addToCatalogue($id, $source, $domain, $desc, $meaning, $alternativeTranslations);
         }
     }
 
@@ -527,8 +532,9 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
      * @param null|string $domain
      * @param null|string $desc
      * @param null|string $meaning
+     * @param array $alternativeTranslations
      */
-    private function addToCatalogue($id, $source, $domain = null, $desc = null, $meaning = null)
+    private function addToCatalogue($id, $source, $domain = null, $desc = null, $meaning = null, $alternativeTranslations = [])
     {
         if (null === $domain) {
             $message = new Message($id);
@@ -546,6 +552,8 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
             $message->setMeaning($meaning);
         }
 
+        $message->setAlternativeTranslations($alternativeTranslations);
+
         $this->catalogue->add($message);
     }
 
@@ -562,7 +570,14 @@ class FormExtractor implements FileVisitorInterface, LoggerAwareInterface, NodeV
 
         if ($this->defaultDomainMessages) {
             foreach ($this->defaultDomainMessages as $message) {
-                $this->addToCatalogue($message['id'], $message['source'], $this->defaultDomain, $message['desc'], $message['meaning']);
+                $this->addToCatalogue(
+                    $message['id'],
+                    $message['source'],
+                    $this->defaultDomain,
+                    $message['desc'],
+                    $message['meaning'],
+                    $message['alternativeTranslations']
+                );
             }
         }
     }

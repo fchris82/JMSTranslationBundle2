@@ -37,7 +37,7 @@ class MyPlaceholderFormType extends AbstractType
                 'placeholder' => /** @Desc("Choice field with a placeholder") */ 'form.choice_placeholder'
             ))
             ->add('field_empty_value', 'choice', array(
-                'empty_value' => /** @Desc("Choice field with an empty_value") */ 'form.choice_empty_value'
+                'empty_value' => /** @Desc("Choice field with an empty_value") @AltTrans("Empty field", locale="en") */ 'form.choice_empty_value'
             ))
         ;
     }

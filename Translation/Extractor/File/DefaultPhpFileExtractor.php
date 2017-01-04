@@ -21,6 +21,7 @@ namespace JMS\TranslationBundle\Translation\Extractor\File;
 use JMS\TranslationBundle\Exception\RuntimeException;
 use Doctrine\Common\Annotations\DocParser;
 use JMS\TranslationBundle\Model\Message;
+use JMS\TranslationBundle\Annotation\AltTrans;
 use JMS\TranslationBundle\Annotation\Meaning;
 use JMS\TranslationBundle\Annotation\Desc;
 use JMS\TranslationBundle\Annotation\Ignore;
@@ -124,6 +125,7 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
 
         $ignore = false;
         $desc = $meaning = null;
+        $alternativeTranslations = [];
         if (null !== $docComment = $this->getDocCommentForNode($node)) {
             if ($docComment instanceof Doc) {
                 $docComment = $docComment->getText();
@@ -135,6 +137,8 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
                     $desc = $annot->text;
                 } elseif ($annot instanceof Meaning) {
                     $meaning = $annot->text;
+                } elseif ($annot instanceof AltTrans) {
+                    $alternativeTranslations[$annot->locale] = $annot->text;
                 }
             }
         }
@@ -184,9 +188,12 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             }
 
             $message = new Message($id, $domain);
-            $message->setDesc($desc);
-            $message->setMeaning($meaning);
-            $message->addSource($this->fileSourceFactory->create($this->file, $node->getLine()));
+            $message
+                ->setDesc($desc)
+                ->setMeaning($meaning)
+                ->addSource($this->fileSourceFactory->create($this->file, $node->getLine()))
+                ->setAlternativeTranslations($alternativeTranslations)
+            ;
 
             // `parameters` index
             $parameterIndex = $domain_index-1;
@@ -219,9 +226,12 @@ class DefaultPhpFileExtractor implements LoggerAwareInterface, FileVisitorInterf
             $id = $node->args[$idIndex]->value->value;
 
             $message = new Message($id, $domain);
-            $message->setDesc($desc);
-            $message->setMeaning($meaning);
-            $message->addSource($this->fileSourceFactory->create($this->file, $node->getLine()));
+            $message
+                ->setDesc($desc)
+                ->setMeaning($meaning)
+                ->addSource($this->fileSourceFactory->create($this->file, $node->getLine()))
+                ->setAlternativeTranslations($alternativeTranslations)
+            ;
 
             // `parameters` index
             $index = $idIndex + 1;

@@ -112,6 +112,10 @@ class XliffLoader implements LoaderInterface
 
                 $m->setMeaning($meaning);
             }
+            // Overrides the meaning from extradata!
+            if ($hasReferenceFiles && $meaning = (string) $trans->attributes('jms', true)->meaning) {
+                $m->setMeaning($meaning);
+            }
 
             if (!($state = (string) $trans->target->attributes()->state) || 'new' !== $state) {
                 $m->setNew(false);

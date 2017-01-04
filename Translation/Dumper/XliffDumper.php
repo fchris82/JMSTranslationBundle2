@@ -174,12 +174,18 @@ class XliffDumper implements DumperInterface
             }
 
             $unit->appendChild($target = $doc->createElement('target'));
-            if (preg_match('/[<>&]/', $message->getLocaleString())) {
-                $target->appendChild($doc->createCDATASection($message->getLocaleString()));
+            $localeString = $message->getLocaleString();
+            if ($localeString == $message->getSourceString()
+                && $altTrans = $message->getAlternativeTranslation($catalogue->getLocale())
+            ) {
+                $localeString = $altTrans;
+            }
+            if (preg_match('/[<>&]/', $localeString)) {
+                $target->appendChild($doc->createCDATASection($localeString));
             } else {
-                $target->appendChild($doc->createTextNode($message->getLocaleString()));
+                $target->appendChild($doc->createTextNode($localeString));
 
-                if (preg_match("/\r\n|\n|\r|\t/", $message->getLocaleString())) {
+                if (preg_match("/\r\n|\n|\r|\t/", $localeString)) {
                     $target->setAttribute('xml:space', 'preserve');
                 }
             }
@@ -239,12 +245,7 @@ class XliffDumper implements DumperInterface
             }
 
             if ($meaning = $message->getMeaning()) {
-                $unit->appendChild($meaningNode = $doc->createElement('note'));
-                if (preg_match('/[<>&]/', $meaning)) {
-                    $meaningNode->appendChild($doc->createCDATASection($meaning));
-                } else {
-                    $meaningNode->appendChild($doc->createTextNode($meaning));
-                }
+                $unit->setAttribute('jms:meaning', $meaning);
             }
         }
 

@@ -20,6 +20,7 @@ namespace JMS\TranslationBundle\Translation\Extractor\File;
 
 use JMS\TranslationBundle\Exception\RuntimeException;
 use JMS\TranslationBundle\Model\Message;
+use JMS\TranslationBundle\Annotation\AltTrans;
 use JMS\TranslationBundle\Annotation\Meaning;
 use JMS\TranslationBundle\Annotation\Desc;
 use JMS\TranslationBundle\Annotation\Ignore;
@@ -171,6 +172,7 @@ class AuthenticationMessagesExtractor implements LoggerAwareInterface, FileVisit
 
         $ignore = false;
         $desc = $meaning = null;
+        $alternativeTranslations = [];
         if ($docComment = $node->getDocComment()) {
             foreach ($this->docParser->parse($docComment->getText(), 'file '.$this->file.' near line '.$node->getLine()) as $annot) {
                 if ($annot instanceof Ignore) {
@@ -179,6 +181,8 @@ class AuthenticationMessagesExtractor implements LoggerAwareInterface, FileVisit
                     $desc = $annot->text;
                 } elseif ($annot instanceof Meaning) {
                     $meaning = $annot->text;
+                } elseif ($annot instanceof AltTrans) {
+                    $alternativeTranslations[$annot->locale] = $annot->text;
                 }
             }
         }
@@ -202,6 +206,7 @@ class AuthenticationMessagesExtractor implements LoggerAwareInterface, FileVisit
             ->setDesc($desc)
             ->setMeaning($meaning)
             ->addSource($this->fileSourceFactory->create($this->file, $node->expr->getLine()))
+            ->setAlternativeTranslations($alternativeTranslations)
         ;
 
         $this->catalogue->add($message);
