@@ -239,12 +239,7 @@ class XliffDumper implements DumperInterface
             }
 
             if ($meaning = $message->getMeaning()) {
-                $unit->appendChild($meaningNode = $doc->createElement('note'));
-                if (preg_match('/[<>&]/', $meaning)) {
-                    $meaningNode->appendChild($doc->createCDATASection($meaning));
-                } else {
-                    $meaningNode->appendChild($doc->createTextNode($meaning));
-                }
+                $unit->setAttribute('jms:meaning', $meaning);
             }
         }
 

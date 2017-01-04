@@ -6,7 +6,7 @@ Differences:
 - Command performance upgrade: scan files only ones and not per languages!
 - Sort source
 - Collect the placeholders (`<jms:placeholder>` element)
-- Move meaning to `<note>` element
+- Move meaning to `jms:meaning` attribute
 - Custom translated form fields
 - Add new configurations: `output_options` -> `add_date` and `add_filerefs`
 - Handle `addViolation()`, `addViolationAt()` and `buildViolation()` functions
