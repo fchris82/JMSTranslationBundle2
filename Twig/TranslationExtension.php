@@ -73,6 +73,7 @@ class TranslationExtension extends \Twig_Extension
         return array(
             new \Twig_SimpleFilter('desc', array($this, 'desc')),
             new \Twig_SimpleFilter('meaning', array($this, 'meaning')),
+            new \Twig_SimpleFilter('altTrans', array($this, 'altTrans')),
         );
     }
 
@@ -117,6 +118,11 @@ class TranslationExtension extends \Twig_Extension
      * @return mixed
      */
     public function meaning($v)
+    {
+        return $v;
+    }
+
+    public function altTrans($v)
     {
         return $v;
     }

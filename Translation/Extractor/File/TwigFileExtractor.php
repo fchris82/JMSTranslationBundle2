@@ -138,20 +138,43 @@ class TwigFileExtractor implements FileVisitorInterface, \Twig_NodeVisitorInterf
                     }
 
                     $name = $this->stack[$i]->getNode('filter')->getAttribute('value');
-                    if ('desc' === $name || 'meaning' === $name) {
-                        $arguments = $this->stack[$i]->getNode('arguments');
-                        if (!$arguments->hasNode(0)) {
-                            throw new RuntimeException(sprintf('The "%s" filter requires exactly one argument, the description text.', $name));
-                        }
+                    switch ($name) {
+                        case 'desc':
+                        case 'meaning':
+                            $arguments = $this->stack[$i]->getNode('arguments');
+                            if (!$arguments->hasNode(0)) {
+                                throw new RuntimeException(sprintf('The "%s" filter requires exactly one argument, the description text.', $name));
+                            }
 
-                        $text = $arguments->getNode(0);
-                        if (!$text instanceof \Twig_Node_Expression_Constant) {
-                            throw new RuntimeException(sprintf('The first argument of the "%s" filter must be a constant expression, such as a string.', $name));
-                        }
+                            $text = $arguments->getNode(0);
+                            if (!$text instanceof \Twig_Node_Expression_Constant) {
+                                throw new RuntimeException(sprintf('The first argument of the "%s" filter must be a constant expression, such as a string.', $name));
+                            }
 
-                        $message->{'set'.$name}($text->getAttribute('value'));
-                    } elseif ('trans' === $name) {
-                        break;
+                            $message->{'set'.$name}($text->getAttribute('value'));
+                            break;
+                        case 'altTrans':
+                            $arguments = $this->stack[$i]->getNode('arguments');
+                            if (!$arguments->hasNode(1)) {
+                                throw new RuntimeException(sprintf('The "%s" filter requires exactly two arguments, the locale and the translation.', $name));
+                            }
+
+                            $locale = $arguments->getNode(0);
+                            $text = $arguments->getNode(1);
+                            if (!$locale instanceof \Twig_Node_Expression_Constant) {
+                                throw new RuntimeException(sprintf('The first argument of the "%s" filter must be a constant expression, such as a string.', $name));
+                            }
+                            if (!$text instanceof \Twig_Node_Expression_Constant) {
+                                throw new RuntimeException(sprintf('The second argument of the "%s" filter must be a constant expression, such as a string.', $name));
+                            }
+
+                            $message->addAlternativeTranslation(
+                                $locale->getAttribute('value'),
+                                $text->getAttribute('value')
+                            );
+                            break;
+                        case 'trans':
+                            break(2);
                     }
                 }
 
