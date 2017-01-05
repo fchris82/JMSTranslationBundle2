@@ -1,8 +1,10 @@
-{{ "text.foo"|trans|desc("Foo Bar")|meaning("Some Meaning")}}
+{{ "text.foo"|trans|desc("Foo Bar")|meaning("Some Meaning")|altTrans("en", "The foo")|altTrans("de", "Der Foo")}}
 
 {{ "text.bar"|trans|desc("Foo") }}
 
 {{ "text.baz"|trans|meaning("Bar") }}
+
+{{ "text.foo2"|trans|altTrans("en", "Foo") }}
 
 {{ "text.foo_bar"|trans({}, "foo") }}
 

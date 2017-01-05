@@ -48,6 +48,8 @@ class TwigFileExtractorTest extends \PHPUnit_Framework_TestCase
         $message = new Message('text.foo');
         $message->setDesc('Foo Bar');
         $message->setMeaning('Some Meaning');
+        $message->addAlternativeTranslation("en", "The foo");
+        $message->addAlternativeTranslation("de", "Der Foo");
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 1));
         $expected->add($message);
 
@@ -61,40 +63,45 @@ class TwigFileExtractorTest extends \PHPUnit_Framework_TestCase
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 5));
         $expected->add($message);
 
-        $message = new Message('text.foo_bar', 'foo');
+        $message = new Message('text.foo2');
+        $message->addAlternativeTranslation('en', 'Foo');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 7));
         $expected->add($message);
 
-        $message = new Message('text.name', 'app');
+        $message = new Message('text.foo_bar', 'foo');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 9));
-        $message->addPlaceholder('%name%');
         $expected->add($message);
 
-        $message = new Message('text.apple_choice', 'app');
+        $message = new Message('text.name', 'app');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 11));
         $message->addPlaceholder('%name%');
         $expected->add($message);
 
-        $message = new Message('foo.bar');
+        $message = new Message('text.apple_choice', 'app');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 13));
-        $expected->add($message);
-
-        $message = new Message('foo.bar2');
-        $message->addSource($fileSourceFactory->create($fixtureSplInfo, 15));
-        $expected->add($message);
-
-        $message = new Message('foo.bar3', 'app');
-        $message->addSource($fileSourceFactory->create($fixtureSplInfo, 17));
         $message->addPlaceholder('%name%');
         $expected->add($message);
 
-        $message = new Message('foo.bar4', 'app');
+        $message = new Message('foo.bar');
+        $message->addSource($fileSourceFactory->create($fixtureSplInfo, 15));
+        $expected->add($message);
+
+        $message = new Message('foo.bar2');
+        $message->addSource($fileSourceFactory->create($fixtureSplInfo, 17));
+        $expected->add($message);
+
+        $message = new Message('foo.bar3', 'app');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 19));
         $message->addPlaceholder('%name%');
         $expected->add($message);
 
-        $message = new Message('text.default_domain');
+        $message = new Message('foo.bar4', 'app');
         $message->addSource($fileSourceFactory->create($fixtureSplInfo, 21));
+        $message->addPlaceholder('%name%');
+        $expected->add($message);
+
+        $message = new Message('text.default_domain');
+        $message->addSource($fileSourceFactory->create($fixtureSplInfo, 23));
         $expected->add($message);
 
         $this->assertEquals($expected, $this->extract('simple_template.html.twig'));
