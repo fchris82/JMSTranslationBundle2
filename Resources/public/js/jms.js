@@ -167,7 +167,6 @@ function JMSTranslationManager(updateMessagePath, isWritable)
 
             $elem.parent().children('.alert-message').remove();
         },
-        // @todo (Chris) Must test and review!
         keyup: function(event, JMS)
         {
             var self = event.target;
@@ -194,6 +193,17 @@ function JMSTranslationManager(updateMessagePath, isWritable)
             {
                 JMS.writable(JMS);
             }
+            // Init placeholders
+            $('ul.placeholders li').each(function( index ) {
+                var text = $(this).parents('tr').find('textarea').val();
+                if(text.search($(this).text()) >= 0) {
+                    $(this).removeClass('required');
+                    $(this).addClass('success');
+                } else {
+                    $(this).removeClass('success');
+                    $(this).addClass('required');
+                }
+            })
         });
     };
 

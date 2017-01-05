@@ -10,3 +10,11 @@ body > .container {
 .jms-sources-list-item {
 	word-break: break-all;
 }
+
+.placeholders .required {
+	color: maroon;
+	font-weight: bold;
+}
+.placeholders .success {
+	color: #00a65a;
+}
