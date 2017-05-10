@@ -21,6 +21,24 @@ $this->trans('user.create.success.%email%', ['%email%' => $user->getEmail()]);
 
 > The double `""` sign is the escaped `"` in the `AltTrans` annotation value.
 
+- Add new Trans* Annotations: `TransArrayKeys`, `TransArrayValues`, `TransString` . You can handle the strings in var:
+
+```php
+<?php
+
+/** @TransArrayValues("error") */
+$msgs = [
+    /** @AltTrans("Error 1", locale="en") */
+    'error.msg1',
+    /** @AltTrans("Error 2", locale="en") */
+    'error.msg2',
+    /** @AltTrans("Error 3", locale="en") */
+    'error.msg3',
+];
+/** @Ignore */
+$this->trans($msgs[$errorId], [], "error");
+```
+
 JMSTranslationBundle [![Build Status](https://secure.travis-ci.org/schmittjoh/JMSTranslationBundle.png?branch=master)](http://travis-ci.org/schmittjoh/JMSTranslationBundle) [![Join the chat at https://gitter.im/schmittjoh/JMSTranslationBundle](https://badges.gitter.im/schmittjoh/JMSTranslationBundle.svg)](https://gitter.im/schmittjoh/JMSTranslationBundle?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 ====================
 

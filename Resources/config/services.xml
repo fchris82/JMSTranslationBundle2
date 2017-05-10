@@ -9,6 +9,7 @@
 
         <parameter key="jms_translation.extractor_manager.class">JMS\TranslationBundle\Translation\ExtractorManager</parameter>
         <parameter key="jms_translation.extractor.file_extractor.class">JMS\TranslationBundle\Translation\Extractor\FileExtractor</parameter>
+        <parameter key="jms_translation.extractor.file.annotation_extractor">JMS\TranslationBundle\Translation\Extractor\File\AnnotationExtractor</parameter>
         <parameter key="jms_translation.extractor.file.default_php_extractor">JMS\TranslationBundle\Translation\Extractor\File\DefaultPhpFileExtractor</parameter>
         <parameter key="jms_translation.extractor.file.translation_container_extractor">JMS\TranslationBundle\Translation\Extractor\File\TranslationContainerExtractor</parameter>
         <parameter key="jms_translation.extractor.file.twig_extractor">JMS\TranslationBundle\Translation\Extractor\File\TwigFileExtractor</parameter>
@@ -88,6 +89,11 @@
             <argument type="service" id="twig" />
             <argument type="service" id="logger" />
         </service>
+        <service id="jms_translation.extractor.file.annotation_extractor" class="%jms_translation.extractor.file.annotation_extractor%" public="false">
+            <argument type="service" id="jms_translation.doc_parser" />
+            <argument type="service" id="jms_translation.file_source_factory" />
+            <tag name="jms_translation.file_visitor" />
+        </service>
         <service id="jms_translation.extractor.file.default_php_extractor" class="%jms_translation.extractor.file.default_php_extractor%" public="false">
             <argument type="service" id="jms_translation.doc_parser" />
             <argument type="service" id="jms_translation.file_source_factory" />
@@ -120,10 +126,13 @@
         <service id="jms_translation.doc_parser" class="Doctrine\Common\Annotations\DocParser" public="false">
             <call method="setImports">
                 <argument type="collection">
-                    <argument key="desc">JMS\TranslationBundle\Annotation\Desc</argument>
-                    <argument key="meaning">JMS\TranslationBundle\Annotation\Meaning</argument>
-                    <argument key="ignore">JMS\TranslationBundle\Annotation\Ignore</argument>
                     <argument key="alttrans">JMS\TranslationBundle\Annotation\AltTrans</argument>
+                    <argument key="desc">JMS\TranslationBundle\Annotation\Desc</argument>
+                    <argument key="ignore">JMS\TranslationBundle\Annotation\Ignore</argument>
+                    <argument key="meaning">JMS\TranslationBundle\Annotation\Meaning</argument>
+                    <argument key="transarraykeys">JMS\TranslationBundle\Annotation\TransArrayKeys</argument>
+                    <argument key="transarrayvalues">JMS\TranslationBundle\Annotation\TransArrayValues</argument>
+                    <argument key="transstring">JMS\TranslationBundle\Annotation\TransString</argument>
                 </argument>
             </call>
             <call method="setIgnoreNotImportedAnnotations">

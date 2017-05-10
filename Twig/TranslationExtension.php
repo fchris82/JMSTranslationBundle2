@@ -122,7 +122,7 @@ class TranslationExtension extends \Twig_Extension
         return $v;
     }
 
-    public function altTrans($v)
+    public function altTrans($v, $locale, $trans)
     {
         return $v;
     }
