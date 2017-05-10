@@ -43,6 +43,13 @@ class Configuration implements ConfigurationInterface
                     ->arrayNode('locales')
                         ->prototype('scalar')->end()
                     ->end()
+                    ->arrayNode('dumper')
+                        ->addDefaultsIfNotSet()
+                        ->children()
+                            ->booleanNode('add_date')->defaultTrue()->end()
+                            ->booleanNode('add_references')->defaultTrue()->end()
+                        ->end()
+                    ->end()
                     ->scalarNode('source_language')->defaultValue('en')->end()
                     ->arrayNode('custom_form_config_names')
                         ->prototype('scalar')->end()
@@ -72,7 +79,7 @@ class Configuration implements ConfigurationInterface
                                                     if (false === $pos = strpos($v, '/')) {
                                                         $bundleName = substr($v, 1);
                                                     } else {
-                                                        $bundleName = substr($v, 1, $pos - 2);
+                                                        $bundleName = substr($v, 1, $pos - 1);
                                                     }
 
                                                     $bundles = $c->getParameter('kernel.bundles');

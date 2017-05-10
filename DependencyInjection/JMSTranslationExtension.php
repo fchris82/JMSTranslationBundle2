@@ -36,9 +36,14 @@ class JMSTranslationExtension extends Extension
         $container->setParameter('jms_translation.source_language', $config['source_language']);
         $container->setParameter('jms_translation.locales', $config['locales']);
 
+
         // Extend form extractor
         $def = $container->getDefinition('jms_translation.extractor.file.form_extractor');
         $def->addMethodCall('addCustomTranslationFields', [$config['custom_form_config_names']]);
+
+        foreach ($config['dumper'] as $option => $value) {
+            $container->setParameter("jms_translation.dumper.{$option}", $value);
+        }
 
         $requests = array();
         foreach ($config['configs'] as $name => $extractConfig) {

@@ -87,4 +87,27 @@ class Controller
         /** @AltTrans("This is the alternative <a href=""http://example.com"">translations &raquo;</a>", locale="en") */
         return $this->translator->trans('text.alternative.en', array('%bar%' => 'barVar'));
     }
+
+    public function testAnnotations()
+    {
+        /** @TransString */
+        $simpleString1 = "simple.text1";
+        $simpleString2 = /** @TransString @AltTrans("Simple text 2", locale="en") */ "simple.text2";
+        $array = [
+            /** @TransArrayValues("subarray") */
+            'hihi' => [
+                /** @AltTrans("Sub array value1", locale="en") */
+                'key1' => 'subarray.value1',
+                /** @AltTrans("Sub array value2", locale="en") */
+                'key2' => 'subarray.value2',
+            ],
+        ];
+
+        /** @TransArrayKeys */
+        return [
+            'user.role.partner' => 'ROLE_PARTNER',
+            'user.role.supporter' => 'ROLE_SUPPORTER',
+            'user.role.admin' => 'ROLE_ADMIN',
+        ];
+    }
 }
