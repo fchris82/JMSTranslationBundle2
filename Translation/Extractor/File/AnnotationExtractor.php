@@ -216,6 +216,29 @@ class AnnotationExtractor implements FileVisitorInterface, LoggerAwareInterface,
         if (isset($node->value) && is_object($node->value) && get_class($node->value) == $nodeClass) {
             return $node->value;
         }
+        /**
+         * <code>
+         *      class BugTicketType extends AbstractType
+         *      {
+         *          /**
+         *           * @TransArrayValues()
+         *           * /
+         *          public static $names = [
+         *              self::UNKNOWN => 'bug_ticket.type.unknown',
+         *              self::BUG     => 'bug_ticket.type.bug',
+         *              self::FEATURE => 'bug_ticket.type.feature',
+         *          ];
+         *      }
+         * </code>
+         */
+        if (isset($node->props) && is_array($node->props)) {
+            // A legelsőt adja vissza
+            foreach ($node->props as $prop) {
+                if ($prop instanceof Node\Stmt\PropertyProperty && get_class($prop->default) == $nodeClass) {
+                    return $prop->default;
+                }
+            }
+        }
 
         return;
     }
