@@ -7,15 +7,41 @@ Differences:
 - Sort source
 - Collect the placeholders (`<jms:placeholder>` element)
 - Move meaning to `jms:meaning` attribute
-- Custom translated form fields
+- Custom translated form fields (You can set these in the `jms_translation` --> `custom_form_config_names` config place
+
+```yml
+jms_translation:
+    custom_form_config_names:
+        - 'title'
+        - 'checkbox_label'
+        - 'minMessage'
+        - 'maxMessage'
+        - 'help'
+        - 'button_label'
+        - 'autolock'
+```
+
 - Handle `addViolation()`, `addViolationAt()` and `buildViolation()` functions
 - Add new Annotation: `AltTrans` . You can add basic translations:
 
 ```php
 <?php
 
-/** @AltTrans("User has been created: <a href=""mailto:%email%"">%email%</a>", locale="en") */
+/**
+ * @AltTrans("User has been created: <a href=""mailto:%email%"">%email%</a>", locale="en")
+ * @AltTrans("A felhasználó létre lett hozva: <a href=""mailto:%email%"">%email%</a>", locale="hu")
+ */
 $this->trans('user.create.success.%email%', ['%email%' => $user->getEmail()]);
+```
+
+In twig template:
+
+```twig
+<input type="text" id="username" name="_username" placeholder="{{ 'form.username'
+    | trans()
+    | altTrans('en', 'Username')
+    | altTrans('hu', 'Felhasználónév')
+}}" />
 ```
 
 > The double `""` sign is the escaped `"` in the `AltTrans` annotation value.
