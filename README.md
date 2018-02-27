@@ -7,7 +7,7 @@ Differences:
 - Sort source
 - Collect the placeholders (`<jms:placeholder>` element)
 - Move meaning to `jms:meaning` attribute
-- Custom translated form fields (You can set these in the `jms_translation` --> `custom_form_config_names` config place
+- Custom translated form fields (You can set these in the `jms_translation` --> `custom_form_config_names` config place)
 
 ```yml
 jms_translation:
