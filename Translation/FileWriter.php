@@ -47,10 +47,9 @@ class FileWriter
      * @param string $domain
      * @param string $filePath
      * @param string $format
-     * @param array $outputOptions
      * @throws \JMS\TranslationBundle\Exception\InvalidArgumentException
      */
-    public function write(MessageCatalogue $catalogue, $domain, $filePath, $format, $outputOptions)
+    public function write(MessageCatalogue $catalogue, $domain, $filePath, $format)
     {
         if (!isset($this->dumpers[$format])) {
             $allowedFormats = array_keys($this->dumpers);
@@ -64,15 +63,6 @@ class FileWriter
         });
 
         $dumper = $this->dumpers[$format];
-
-        if ($dumper instanceof \JMS\TranslationBundle\Translation\Dumper\XliffDumper) {
-            if (isset($outputOptions['add_date'])) {
-                $dumper->setAddDate($outputOptions['add_date']);
-            }
-            if (isset($outputOptions['add_filerefs'])) {
-                $dumper->setAddReference($outputOptions['add_filerefs']);
-            }
-        }
 
         file_put_contents($filePath, $dumper->dump($catalogue, $domain, $filePath));
     }

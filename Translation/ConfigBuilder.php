@@ -81,16 +81,6 @@ final class ConfigBuilder
     private $loadResources = array();
 
     /**
-     * @var array
-     */
-    private $outputOptions = [
-        'xlf' => [
-            'add_date' => true,
-            'add_filerefs' => true
-        ]
-    ];
-
-    /**
      * @static
      * @param Config $config
      * @return ConfigBuilder
@@ -312,8 +302,7 @@ final class ConfigBuilder
             $this->excludedNames,
             $this->enabledExtractors,
             $this->keepOldTranslations,
-            $this->loadResources,
-            $this->outputOptions
+            $this->loadResources
         );
     }
 
@@ -324,20 +313,6 @@ final class ConfigBuilder
     public function setLoadResources(array $loadResources)
     {
         $this->loadResources = $loadResources;
-
-        return $this;
-    }
-
-    public function setOutputOptions($format, array $options)
-    {
-        $this->outputOptions[$format] = $options;
-
-        return $this;
-    }
-
-    public function setOutputOption($format, $key, $value)
-    {
-        $this->outputOptions[$format][$key] = $value;
 
         return $this;
     }

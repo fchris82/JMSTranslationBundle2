@@ -102,12 +102,6 @@ class JMSTranslationExtension extends Extension
                 $def->addMethodCall('setLoadResources', array($extractConfig['external_translations_dirs']));
             }
 
-            if (isset($extractConfig['output_options'])) {
-                foreach ($extractConfig['output_options'] as $format => $formatOptions) {
-                    $def->addMethodCall('setOutputOptions', array($format, $formatOptions));
-                }
-            }
-
             $requests[$name] = $def;
         }
 

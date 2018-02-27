@@ -8,7 +8,6 @@ Differences:
 - Collect the placeholders (`<jms:placeholder>` element)
 - Move meaning to `jms:meaning` attribute
 - Custom translated form fields
-- Add new configurations: `output_options` -> `add_date` and `add_filerefs`
 - Handle `addViolation()`, `addViolationAt()` and `buildViolation()` functions
 - Add new Annotation: `AltTrans` . You can add basic translations:
 

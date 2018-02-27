@@ -62,8 +62,6 @@ class ExtractTranslationCommand extends ContainerAwareCommand
             ->addOption('default-output-format', null, InputOption::VALUE_REQUIRED, 'The default output format (defaults to xlf).')
             ->addOption('keep', null, InputOption::VALUE_NONE, 'Define if the updater service should keep the old translation (defaults to false).')
             ->addOption('external-translations-dir', null, InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED, 'Load external translation resources')
-            ->addOption('add-date', null, InputOption::VALUE_REQUIRED, 'Whether to add the extraction date to the extracted xlf file e.g. --add-date=0')
-            ->addOption('add-filerefs', null, InputOption::VALUE_REQUIRED, 'Whether to add JMS file references as extradata to the extracted xlf file e.g. --add-filerefs=1')
         ;
     }
 
@@ -252,14 +250,6 @@ class ExtractTranslationCommand extends ContainerAwareCommand
 
         if ($loadResource = $input->getOption('external-translations-dir')) {
             $builder->setLoadResources($loadResource);
-        }
-
-        if ($addDate = $input->getOption('add-date')) {
-            $builder->setOutputOption('xlf', 'add_date', (boolean) $addDate);
-        }
-
-        if ($addFileRefs = $input->getOption('add-filerefs')) {
-            $builder->setOutputOption('xlf', 'add_filerefs', (boolean) $addFileRefs);
         }
     }
 }

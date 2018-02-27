@@ -91,11 +91,6 @@ final class Config
     private $loadResources;
 
     /**
-     * @var array
-     */
-    private $outputOptions;
-
-    /**
      * Config constructor.
      * @param $translationsDir
      * @param $locale
@@ -109,9 +104,8 @@ final class Config
      * @param array $enabledExtractors
      * @param bool $keepOldMessages
      * @param array $loadResources
-     * @param array $outputOptions
      */
-    public function __construct($translationsDir, $locale, array $ignoredDomains, array $domains, $outputFormat, $defaultOutputFormat, array $scanDirs, array $excludedDirs, array $excludedNames, array $enabledExtractors, $keepOldMessages, array $loadResources, array $outputOptions)
+    public function __construct($translationsDir, $locale, array $ignoredDomains, array $domains, $outputFormat, $defaultOutputFormat, array $scanDirs, array $excludedDirs, array $excludedNames, array $enabledExtractors, $keepOldMessages, array $loadResources)
     {
         if (empty($translationsDir)) {
             throw new InvalidArgumentException('The directory where translations are must be set.');
@@ -151,7 +145,6 @@ final class Config
         $this->enabledExtractors = $enabledExtractors;
         $this->keepOldMessages = $keepOldMessages;
         $this->loadResources = $loadResources;
-        $this->outputOptions = $outputOptions;
     }
 
     /**
@@ -274,13 +267,5 @@ final class Config
     public function getLoadResources()
     {
         return $this->loadResources;
-    }
-
-    /**
-     * @return array
-     */
-    public function getOutputOptions($format = null)
-    {
-        return $format && isset($this->outputOptions[$format]) ? $this->outputOptions[$format] : $this->outputOptions;
     }
 }
