@@ -3,7 +3,7 @@ JMSTranslationBundle fork
 
 Differences:
 
-- Command performance upgrade: scan files only ones and not per languages!
+- Command performance upgrade: scan files only once and not per languages!
 - Sort source
 - Collect the placeholders (`<jms:placeholder>` element)
 - Move meaning to `jms:meaning` attribute
